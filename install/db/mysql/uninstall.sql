@@ -1,0 +1,12 @@
+DROP TABLE IF EXISTS `b_umax_analysis`;
+DROP TABLE IF EXISTS `b_umax_seo_on_page_element`;
+DROP TABLE IF EXISTS `b_umax_seo_settings`;
+DROP TABLE IF EXISTS `b_umax_summary`;
+DROP TABLE IF EXISTS `b_umax_seo_on_page`;
+DROP TABLE IF EXISTS `b_umax_indexes`;
+DROP TABLE IF EXISTS `b_umax_metas`;
+DROP TABLE IF EXISTS `b_umax_images`;
+DROP TABLE IF EXISTS `b_umax_commerce`;
+DROP TABLE IF EXISTS `b_umax_seo_pages`;
+DROP TABLE IF EXISTS `b_umax_seo_errors`;
+DROP TABLE IF EXISTS `b_umax_seo_on_page_element_errors`;

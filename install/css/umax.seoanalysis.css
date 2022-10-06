@@ -1,0 +1,8 @@
+.adm-submenu-item-link-icon.subicon {
+    background: no-repeat center url(icons/umax.seoanalysis/logo.png);
+    background-size: contain;
+}
+#global_menu_umax .adm-main-menu-item-icon {
+    background: no-repeat center url(icons/umax.seoanalysis/sublogo.png);
+    background-size: contain;
+}
