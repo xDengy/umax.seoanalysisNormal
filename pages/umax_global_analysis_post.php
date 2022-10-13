@@ -131,9 +131,6 @@
                     <a class="download__btn" id="seo" href="<?=$APPLICATION->GetCurPage()?>?seo=Y">
                         Анализ категорий
                     </a>
-                    <a class="download__btn" id="seo" href="<?=$APPLICATION->GetCurPage()?>?update=Y">
-                        Обновить информацию о META и коммерции
-                    </a>
                 <?else:?>
                     <a class="download__btn" id="back" href="<?=$APPLICATION->GetCurPage()?>">
                         Вернуться назад
@@ -298,6 +295,11 @@
                     <?endif;?>
                 </div>
             <?endif;?>
+            <div class="metaCommerce">
+                <a class="download__btn" id="seo" href="<?=$APPLICATION->GetCurPage()?>?update=Y">
+                    Обновить информацию о META и коммерции
+                </a>
+            </div>
         </div>
         <?
             $pages = json_encode($pages);
@@ -455,10 +457,12 @@
                                 let detail = document.querySelector('.download__btn#detail')
                                 let seo = document.querySelector('.download__btn#seo')
                                 let pages__arr = document.querySelector('#pages__arr')
+                                let metaCommerce = document.querySelector('.metaCommerce')
                                 var iAr = [];
                                 for(let i = 0; i < pages.length; i++) {
                                     if(iAr.length == 0) {
                                         btn?.classList.add('hidden');
+                                        metaCommerce?.classList.add('hidden');
                                         detail?.classList.add('hidden');
                                         seo?.classList.add('hidden');
                                         countList?.classList.remove('hidden');
@@ -536,6 +540,7 @@
                                                 setTimeout(() => {
                                                     countList?.classList.add('hidden');
                                                     btn?.classList.remove('hidden');
+                                                    metaCommerce?.classList.remove('hidden');
                                                     detail?.classList.remove('hidden');
                                                     seo?.classList.remove('hidden');
                                                     if(pages__arr)
@@ -571,10 +576,12 @@
                             let countList = document.querySelector('.count__list')
                             let back = document.querySelector('.download__btn#back')
                             let elems__arr = document.querySelector('#elems__arr')
+                            let metaCommerce = document.querySelector('.metaCommerce')
                             var iAr = [];
                             for(let i = 0; i < elems.length; i++) {
                                 if(iAr.length == 0) {
                                     btn.classList.add('hidden');
+                                    metaCommerce.classList.add('hidden');
                                     back.classList.add('hidden');
                                     countList.classList.remove('hidden');
                                     if(elems__arr)
@@ -656,11 +663,10 @@
                                         Count.draw();
                                         document.querySelector('span.count').textContent = (iAr.length + 1) + ' из ' + elems.length
 
-                                        console.log(iAr.length, elems.length - 1, i);
-
                                         if(iAr.length == elems.length - 1) {
                                             setTimeout(() => {
                                                 countList.classList.add('hidden');
+                                                metaCommerce.classList.remove('hidden');
                                                 btn.classList.remove('hidden');
                                                 back.classList.remove('hidden');
                                                 if(elems__arr)
@@ -745,6 +751,14 @@
             #analysis__content .selectZone > span:hover {
                 border-bottom-color: #5555;
                 color: #5555;
+            }
+            #analysis__content .metaCommerce {
+                padding: 20px 0;
+                border-top: 3px solid;
+                width: fit-content;
+            }
+            #analysis__content .metaCommerce .download__btn {
+                display: flex;
             }
         </style>
 <?

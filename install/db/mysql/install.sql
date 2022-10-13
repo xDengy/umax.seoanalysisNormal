@@ -56,6 +56,7 @@ CREATE TABLE IF NOT EXISTS `b_umax_seo_on_page_element`
     `ID`  integer NOT NULL AUTO_INCREMENT ,
     `page_url` text NULL,
     `IBLOCK_TYPE` text NULL,
+    `IBLOCK_ID` integer NULL,
     `ELEMENT_ID` integer NULL,
     `VALUE` integer NULL,
     `FULL_VALUE` integer NULL,

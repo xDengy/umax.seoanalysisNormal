@@ -40,6 +40,11 @@ class UmaxSeoOnPageElementTable extends \UmaxAnalysisDataManager
                 'required' => true,
                 'title' => 'Тип страницы',
             ),
+            'IBLOCK_ID' => array(
+                'data_type' => 'text',
+                'required' => true,
+                'title' => 'Информационный блок',
+            ),
             'ELEMENT_ID' => array(
                 'data_type' => 'integer',
                 'required' => true,

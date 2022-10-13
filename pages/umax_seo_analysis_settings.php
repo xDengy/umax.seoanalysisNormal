@@ -27,7 +27,6 @@ if (!Loader::includeModule('umax.seoanalysis') || \UmaxAnalysisDataManager::isDe
     ?>
     <?if($_POST):?>
         <?
-            UmaxSeoSettingsTable::clear();
             $postAr = [];
             foreach ($_POST as $key => $value) {
                 foreach($value as $block) {
@@ -37,16 +36,19 @@ if (!Loader::includeModule('umax.seoanalysis') || \UmaxAnalysisDataManager::isDe
                     ];
                 }
             }
-            $allSet = UmaxSeoSettingsTable::getList()->fetch();
+            $allSet = UmaxSeoSettingsTable::getList()->FetchAll();
             unset($allSet['ID']);
             foreach ($allSet as $k => $v) {
-                if(intval($allSet[$k]) !== intval($_POST[$k])) {
+                if(intval($allSet[$k]['IBLOCK_ID']) !== intval($postAr[$k]['IBLOCK_ID'])) {
                     UmaxSeoOnPageElementTable::clear([
                         'filter' => [
-                            'IBLOCK_TYPE' => $k
+                            'IBLOCK_TYPE' => $allSet[$k]['TYPE'],
+                            'IBLOCK_ID' => $allSet[$k]['IBLOCK_ID']
                         ]
                     ]);
-                }                
+                    unset($postAr[$k]);
+                    UmaxSeoSettingsTable::delete($allSet[$k]['ID']);
+                }
             }
             UmaxSeoSettingsTable::addMultiple($postAr);
             LocalRedirect($APPLICATION->GetCurPage());
@@ -55,39 +57,45 @@ if (!Loader::includeModule('umax.seoanalysis') || \UmaxAnalysisDataManager::isDe
     <form action="<?=$APPLICATION->GetCurPage()?>" method="post">
         <div class="select__block">
             <span>Каталог</span>
-            <select multiple name="GOODS[]">
-                <option value="" <?if(!array_key_exists(array_search('GOODS', array_column($seo, 'TYPE')), $seo)):?>selected<?endif;?>></option>
+            <div class="checkbox-wrap">
                 <?foreach ($iblocks as $iblock):?>
                     <?
                         $exist = array_search($iblock['ID'], array_column($seo, 'IBLOCK_ID'));    
                     ?>
-                    <option <?if(array_key_exists($exist, $seo) && $seo[$exist]['TYPE'] == 'GOODS'):?>selected<?endif;?> value="<?=$iblock['ID']?>"><?=$iblock['TITLE']?></option>
+                    <div>
+                        <input type="checkbox" name="GOODS[]" <?if(array_key_exists($exist, $seo) && $seo[$exist]['TYPE'] == 'GOODS'):?>checked<?endif;?> value="<?=$iblock['ID']?>" id="GOODS-<?=$iblock['ID']?>">
+                        <label for="GOODS-<?=$iblock['ID']?>"><?=$iblock['TITLE']?></label>
+                    </div>
                 <?endforeach;?>
-            </select>
+            </div>
         </div>
         <div class="select__block">
             <span>Услуги</span>
-            <select multiple name="SERVICE[]">
-                <option value="" <?if(!array_key_exists(array_search('SERVICE', array_column($seo, 'TYPE')), $seo)):?>selected<?endif;?>></option>
+            <div class="checkbox-wrap">
                 <?foreach ($iblocks as $iblock):?>
                     <?
                         $exist = array_search($iblock['ID'], array_column($seo, 'IBLOCK_ID'));    
                     ?>
-                    <option <?if(array_key_exists($exist, $seo) && $seo[$exist]['TYPE'] == 'SERVICE'):?>selected<?endif;?> value="<?=$iblock['ID']?>"><?=$iblock['TITLE']?></option>
+                    <div>
+                        <input type="checkbox" name="SERVICE[]" <?if(array_key_exists($exist, $seo) && $seo[$exist]['TYPE'] == 'SERVICE'):?>checked<?endif;?> value="<?=$iblock['ID']?>" id="SERVICE-<?=$iblock['ID']?>">
+                        <label for="SERVICE-<?=$iblock['ID']?>"><?=$iblock['TITLE']?></label>
+                    </div>
                 <?endforeach;?>
-            </select>
+            </div>
         </div>
         <div class="select__block">
             <span>Статьи</span>
-            <select multiple name="NEWS[]">
-                <option value="" <?if(!array_key_exists(array_search('NEWS', array_column($seo, 'TYPE')), $seo)):?>selected<?endif;?>></option>
+            <div class="checkbox-wrap">
                 <?foreach ($iblocks as $iblock):?>
                     <?
                         $exist = array_search($iblock['ID'], array_column($seo, 'IBLOCK_ID'));    
                     ?>
-                    <option <?if(array_key_exists($exist, $seo) && $seo[$exist]['TYPE'] == 'NEWS'):?>selected<?endif;?> value="<?=$iblock['ID']?>"><?=$iblock['TITLE']?></option>
+                    <div>
+                        <input type="checkbox" name="NEWS[]" <?if(array_key_exists($exist, $seo) && $seo[$exist]['TYPE'] == 'NEWS'):?>checked<?endif;?> value="<?=$iblock['ID']?>" id="NEWS-<?=$iblock['ID']?>">
+                        <label for="NEWS-<?=$iblock['ID']?>"><?=$iblock['TITLE']?></label>
+                    </div>
                 <?endforeach;?>
-            </select>
+            </div>
         </div>
         <input type="submit" value="Сохранить">
     </form>
@@ -104,9 +112,13 @@ if (!Loader::includeModule('umax.seoanalysis') || \UmaxAnalysisDataManager::isDe
             margin-bottom: 5px;
             font-weight: 700;
         }
+        .checkbox-wrap {
+            overflow: auto;
+            max-height: 100px;
+        }
     </style>
     <?
     $APPLICATION->SetTitle('Настройка');
 }
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin.php");
-?>
+?>  

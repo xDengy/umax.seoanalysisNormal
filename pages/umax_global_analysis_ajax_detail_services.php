@@ -315,6 +315,7 @@
             'YELLOW' => $yellow,
             'GREEN' => $green,
             'BLUE' => $blue,
+            'IBLOCK_ID' => CIBlockElement::GetById($elemId)->Fetch()['IBLOCK_ID']
         ];
 
         $elemRes = UmaxSeoOnPageElementTable::GetList([
