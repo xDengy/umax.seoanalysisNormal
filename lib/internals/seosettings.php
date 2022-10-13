@@ -30,20 +30,15 @@ class UmaxSeoSettingsTable extends \UmaxAnalysisDataManager
                 'autocomplete' => true,
                 'title' => 'ID',
             ),
-            'GOODS' => array(
-                'data_type' => 'integer',
+            'TYPE' => array(
+                'data_type' => 'text',
                 'required' => true,
-                'title' => 'GOODS',
+                'title' => 'ТИП',
             ),
-            'SERVICE' => array(
+            'IBLOCK_ID' => array(
                 'data_type' => 'integer',
                 'required' => true,
-                'title' => 'SERVICE',
-            ),
-            'NEWS' => array(
-                'data_type' => 'integer',
-                'required' => true,
-                'title' => 'NEWS',
+                'title' => 'IBLOCK_ID',
             ),
         );
     }

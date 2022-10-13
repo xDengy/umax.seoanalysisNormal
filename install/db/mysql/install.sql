@@ -407,9 +407,8 @@ CREATE TABLE IF NOT EXISTS `b_umax_commerce`
 );
 CREATE TABLE IF NOT EXISTS `b_umax_seo_settings`
 (
-    `ID`  integer NOT NULL AUTO_INCREMENT ,
-    `GOODS` integer NULL,
-    `SERVICE` integer NULL,
-    `NEWS` integer NULL,
+    `ID` integer NOT NULL AUTO_INCREMENT ,
+    `TYPE` text not null,
+    `IBLOCK_ID` integer not null,
     PRIMARY KEY (`ID`)
 );

@@ -12,15 +12,14 @@ class UmaxAnalysisTab
         global $APPLICATION;
 
         if($APPLICATION->GetCurPage() == '/bitrix/admin/iblock_element_edit.php' && Loader::includeModule('umax.seoanalysis') && !\UmaxAnalysisDataManager::isDemoEnd()) {
-            $settings = UmaxSeoSettingsTable::getList()->Fetch();
-            unset($settings['ID']);
+            $settings = UmaxSeoSettingsTable::getList()->FetchAll();
             $inSettings = false;
             
-            if(in_array(htmlspecialchars($_REQUEST['IBLOCK_ID']), $settings)) {
+            if(array_key_exists(array_search($_REQUEST['IBLOCK_ID'], array_column($settings, 'IBLOCK_ID')), $settings)) {
                 $inSettings = true;
                 $settingAr = [];
                 foreach ($settings as $k => $value) {
-                    $settingAr[$value] = $k;
+                    $settingAr[$value['IBLOCK_ID']] = $value['TYPE'];
                 }
                 $key = $settingAr[$_REQUEST['IBLOCK_ID']];
             }

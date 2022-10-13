@@ -1,6 +1,8 @@
 <?
     use Umax\Lib\Internals\UmaxSeoAnalysisTable;
     use Umax\Lib\Internals\UmaxSeoSettingsTable;
+    use Umax\Lib\Internals\UmaxMetasTable;
+    use Umax\Lib\Internals\UmaxCommerceTable;
     use Bitrix\Main\Loader;
 
     require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_before.php");
@@ -8,6 +10,7 @@
     global $APPLICATION;
 ?>
 <?
+
     if (!Loader::includeModule('umax.seoanalysis') || \UmaxAnalysisDataManager::isDemoEnd()) {
         echo CAdminMessage::ShowOldStyleError("Модуль не установлен");
     } else {
@@ -34,7 +37,7 @@
             }
             $i++;
         }
-        $settings = UmaxSeoSettingsTable::getList()->Fetch();
+        $settings = UmaxSeoSettingsTable::getList()->FetchAll();
 
         $settingAr = [];
         foreach($settings as $setting => $value) {
@@ -42,64 +45,83 @@
                 $arOrder  = array("SORT" => "ASC"),
                 $arFilter = array(
                     "ACTIVE"    => "Y",
-                    'IBLOCK_ID' => $value
+                    'IBLOCK_ID' => $value['IBLOCK_ID']
                 ),
                 false,
                 ['ID', 'NAME'],
                 false,
             );
-            while($arElement = $rsElement->GetNext()) {
-                $settingAr[$setting][] = $arElement;
+            $settingAr[$value['TYPE']][$value['IBLOCK_ID']]['IBLOCK_NAME'] = CIBlock::GetById($value['IBLOCK_ID'])->Fetch()['NAME'];
+            while($arElement = $rsElement->Fetch()) {
+                $settingAr[$value['TYPE']][$value['IBLOCK_ID']][] = $arElement;
             }
 
-            foreach($settingAr[$setting] as $sectKey => $sect) {
+            if(!empty($settingAr)) {
+                if(is_array($settingAr[$value['TYPE']][$value['IBLOCK_ID']])) {
+                    foreach($settingAr[$value['TYPE']][$value['IBLOCK_ID']] as $sectKey => $sect) {
+                        if($sectKey !== 'IBLOCK_NAME') {
+                            $rsElement = CIBlockElement::GetList(
+                                array("SORT" => "ASC"),
+                                array(
+                                    "ACTIVE"    => "Y",
+                                    'IBLOCK_ID' => $value['IBLOCK_ID'],
+                                    'IBLOCK_SECTION_ID' => $sect['ID']
+                                ),
+                                false,
+                                false,
+                                array()
+                            );
+                            while($arElement = $rsElement->GetNext()) {
+                                $settingAr[$value['TYPE']][$value['IBLOCK_ID']][$sectKey]['items'][] = [
+                                    'type' => $value['TYPE'],
+                                    'id' => $arElement['ID'],
+                                    'page' => $_SERVER['HTTP_X_FORWARDED_PROTO'] . '://' . $_SERVER['HTTP_HOST'] . $arElement['DETAIL_PAGE_URL'],
+                                    'name' => $arElement['NAME']
+                                ];
+                            }
+                            if(!isset($settingAr[$value['TYPE']][$value['IBLOCK_ID']][$sectKey]['items'])) 
+                                unset($settingAr[$value['TYPE']][$value['IBLOCK_ID']][$sectKey]);
+                        }
+                    }
+                }
+            }
+            if(count($settingAr[$value['TYPE']][$value['IBLOCK_ID']]) == 1) {
                 $rsElement = CIBlockElement::GetList(
                     array("SORT" => "ASC"),
                     array(
                         "ACTIVE"    => "Y",
-                        'IBLOCK_ID' => $value,
-                        'IBLOCK_SECTION_ID' => $sect['ID']
+                        'IBLOCK_ID' => $value['IBLOCK_ID'],
                     ),
                     false,
                     false,
                     array()
                 );
                 while($arElement = $rsElement->GetNext()) {
-                    $settingAr[$setting][$sectKey]['items'][] = [
-                        'type' => $setting,
+                    $settingAr[$value['TYPE']][$value['IBLOCK_ID']]['items'][] = [
+                        'type' => $value['TYPE'],
                         'id' => $arElement['ID'],
                         'page' => $_SERVER['HTTP_X_FORWARDED_PROTO'] . '://' . $_SERVER['HTTP_HOST'] . $arElement['DETAIL_PAGE_URL'],
                         'name' => $arElement['NAME']
                     ];
                 }
-                if(!isset($settingAr[$setting][$sectKey]['items'])) 
-                    unset($settingAr[$setting][$sectKey]);
+
+                if(count($settingAr[$value['TYPE']][$value['IBLOCK_ID']]) == 1)
+                    unset($settingAr[$value['TYPE']][$value['IBLOCK_ID']]);
             }
-            if(empty($settingAr[$setting])) {
-                $rsElement = CIBlockElement::GetList(
-                    array("SORT" => "ASC"),
-                    array(
-                        "ACTIVE"    => "Y",
-                        'IBLOCK_ID' => $value,
-                    ),
-                    false,
-                    false,
-                    array()
-                );
-                while($arElement = $rsElement->GetNext()) {
-                    $settingAr[$setting]['items'][] = [
-                        'type' => $setting,
-                        'id' => $arElement['ID'],
-                        'page' => $_SERVER['HTTP_X_FORWARDED_PROTO'] . '://' . $_SERVER['HTTP_HOST'] . $arElement['DETAIL_PAGE_URL'],
-                        'name' => $arElement['NAME']
-                    ];
-                }
-            }
+
+            if(count($settingAr[$value['TYPE']]) == 0)
+                unset($settingAr[$value['TYPE']]);
         }
         $seotable = UmaxSeoAnalysisTable::getList()->Fetch();
         $isEmpty = UmaxSeoAnalysisTable::checkIfEmpty($seotable);
     ?>
         <div id="analysis__content">
+            <?if($_GET['success']):?>
+                <p>Обновление успешно завершилось</p>    
+                <script>
+                    window.history.replaceState('', '', "<?=$APPLICATION->GetCurPage()?>")
+                </script>
+            <?endif?>
             <p>Рекомендуется выполнять анализ через режим инкогнито, для возможности продолжать работать пока выполняется анализ</p>
             <?if($isEmpty == false):?>
                 <?if(!$_GET['detail'] && !$_GET['seo']):?>
@@ -108,6 +130,9 @@
                     </a>
                     <a class="download__btn" id="seo" href="<?=$APPLICATION->GetCurPage()?>?seo=Y">
                         Анализ категорий
+                    </a>
+                    <a class="download__btn" id="seo" href="<?=$APPLICATION->GetCurPage()?>?update=Y">
+                        Обновить информацию о META и коммерции
                     </a>
                 <?else:?>
                     <a class="download__btn" id="back" href="<?=$APPLICATION->GetCurPage()?>">
@@ -130,26 +155,37 @@
                             <div class="elems__arr baseline">
                                 <span>Товары</span>
                                 <div class="element__block">
-                                    <?if(!array_key_exists('items', $settingAr['GOODS'])):?>
-                                        <div class="selectZone">
-                                            <span class="selectAll">
-                                                Выбрать все
-                                            </span>
-                                            <span class="removeAll">
-                                                Убрать все
-                                            </span>
-                                        </div>
+                                    <?if(array_key_exists('GOODS', $settingAr)):?>
                                         <?foreach($settingAr['GOODS'] as $itemKey => $item):?>
-                                            <div class="element">
-                                                <input type="checkbox" value="<?=$itemKey?>" id="GOODS-<?=$itemKey?>">
-                                                <label for="GOODS-<?=$itemKey?>"><?=$item['NAME']?></label>
+                                            <div class="element__block">
+                                                <div class="select-zone__block">
+                                                    <?=$item['IBLOCK_NAME']?>
+                                                    <div class="selectZone">
+                                                        <span class="selectAll">
+                                                            Выбрать все
+                                                        </span>
+                                                        <span class="removeAll">
+                                                            Убрать все
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <?if(!array_key_exists('items', $item)):?>
+                                                    <?foreach($item as $kk => $itemValue):?>
+                                                        <?if($kk !== 'IBLOCK_NAME'):?>
+                                                            <div class="element">
+                                                                <input type="checkbox" value="<?=$kk?>" id="GOODS-<?=$kk?>-<?=$itemKey?>">
+                                                                <label for="GOODS-<?=$kk?>-<?=$itemKey?>"><?=$itemValue['NAME']?></label>
+                                                            </div>
+                                                        <?endif?>
+                                                    <?endforeach?>
+                                                <?else:?>
+                                                    <div class="element">
+                                                        <input type="checkbox" value="GOODS" id="GOODS-items-<?=$itemKey?>">
+                                                        <label for="GOODS-items-<?=$itemKey?>">Элементы без разделов</label>
+                                                    </div>
+                                                <?endif;?>
                                             </div>
                                         <?endforeach?>
-                                    <?else:?>
-                                        <div class="element">
-                                            <input type="checkbox" value="GOODS" id="GOODS-items">
-                                            <label for="GOODS-items">Элементы без разделов</label>
-                                        </div>
                                     <?endif;?>
                                 </div>
                             </div>
@@ -158,26 +194,37 @@
                             <div class="elems__arr baseline">
                                 <span>Услуги</span>
                                 <div class="element__block">
-                                    <?if(!array_key_exists('items', $settingAr['SERVICE'])):?>
-                                        <div class="selectZone">
-                                            <span class="selectAll">
-                                                Выбрать все
-                                            </span>
-                                            <span class="removeAll">
-                                                Убрать все
-                                            </span>
-                                        </div>
+                                    <?if(array_key_exists('SERVICE', $settingAr)):?>
                                         <?foreach($settingAr['SERVICE'] as $itemKey => $item):?>
-                                            <div class="element">
-                                                <input type="checkbox" value="<?=$itemKey?>" id="SERVICE-<?=$itemKey?>">
-                                                <label for="SERVICE-<?=$itemKey?>"><?=$item['NAME']?></label>
+                                            <div class="element__block">
+                                                <div class="select-zone__block">
+                                                    <?=$item['IBLOCK_NAME']?>
+                                                    <div class="selectZone">
+                                                        <span class="selectAll">
+                                                            Выбрать все
+                                                        </span>
+                                                        <span class="removeAll">
+                                                            Убрать все
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <?if(!array_key_exists('items', $item)):?>
+                                                    <?foreach($item as $kk => $itemValue):?>
+                                                        <?if($kk !== 'IBLOCK_NAME'):?>
+                                                            <div class="element">
+                                                                <input type="checkbox" value="<?=$kk?>" id="SERVICE-<?=$kk?>-<?=$itemKey?>">
+                                                                <label for="SERVICE-<?=$kk?>-<?=$itemKey?>"><?=$itemValue['NAME']?></label>
+                                                            </div>
+                                                        <?endif?>
+                                                    <?endforeach?>
+                                                <?else:?>
+                                                    <div class="element">
+                                                        <input type="checkbox" value="SERVICE" id="SERVICE-items-<?=$itemKey?>">
+                                                        <label for="SERVICE-items-<?=$itemKey?>">Элементы без разделов</label>
+                                                    </div>
+                                                <?endif;?>
                                             </div>
                                         <?endforeach?>
-                                    <?else:?>
-                                        <div class="element">
-                                            <input type="checkbox" value="SERVICE" id="SERVICE-items">
-                                            <label for="SERVICE-items">Элементы без разделов</label>
-                                        </div>
                                     <?endif;?>
                                 </div>
                             </div>
@@ -186,31 +233,49 @@
                             <div class="elems__arr baseline">
                                 <span>Статьи</span>
                                 <div class="element__block">
-                                    <?if(!array_key_exists('items', $settingAr['NEWS'])):?>
-                                        <div class="selectZone">
-                                            <span class="selectAll">
-                                                Выбрать все
-                                            </span>
-                                            <span class="removeAll">
-                                                Убрать все
-                                            </span>
-                                        </div>
+                                    <?if(array_key_exists('NEWS', $settingAr)):?>
                                         <?foreach($settingAr['NEWS'] as $itemKey => $item):?>
-                                            <div class="element">
-                                                <input type="checkbox" value="<?=$itemKey?>" id="NEWS-<?=$itemKey?>">
-                                                <label for="NEWS-<?=$itemKey?>"><?=$item['NAME']?></label>
+                                            <div class="element__block">
+                                                <div class="select-zone__block">
+                                                    <?=$item['IBLOCK_NAME']?>
+                                                    <div class="selectZone">
+                                                        <span class="selectAll">
+                                                            Выбрать все
+                                                        </span>
+                                                        <span class="removeAll">
+                                                            Убрать все
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <?if(!array_key_exists('items', $item)):?>
+                                                    <?foreach($item as $kk => $itemValue):?>
+                                                        <?if($kk !== 'IBLOCK_NAME'):?>
+                                                            <div class="element">
+                                                                <input type="checkbox" value="<?=$kk?>" id="NEWS-<?=$kk?>-<?=$itemKey?>">
+                                                                <label for="NEWS-<?=$kk?>-<?=$itemKey?>"><?=$itemValue['NAME']?></label>
+                                                            </div>
+                                                        <?endif?>
+                                                    <?endforeach?>
+                                                <?else:?>
+                                                    <div class="element">
+                                                        <input type="checkbox" value="NEWS" id="NEWS-items-<?=$itemKey?>">
+                                                        <label for="NEWS-items-<?=$itemKey?>">Элементы без разделов</label>
+                                                    </div>
+                                                <?endif;?>
                                             </div>
                                         <?endforeach?>
-                                    <?else:?>
-                                        <div class="element">
-                                            <input type="checkbox" value="NEWS" id="NEWS-items">
-                                            <label for="NEWS-items">Элементы без разделов</label>
-                                        </div>
                                     <?endif;?>
                                 </div>
                             </div>
                         </div>
                     </div>
+                <?endif;?>
+                <?if($_GET['update']):?>
+                    <?
+                        UmaxMetasTable::ude();
+                        UmaxCommerceTable::getContent();
+                        LocalRedirect($APPLICATION->GetCurPage() . '?success=Y');
+                    ?>
                 <?endif;?>
             <?endif;?>
             <div class="count__list hidden">
@@ -345,7 +410,7 @@
                 let selectAll = document.querySelectorAll('.selectAll')
                 for (let index = 0; index < selectAll.length; index++) {
                     selectAll[index].addEventListener('click', function() {
-                        let selectAllCheckBoxes = selectAll[index].parentNode.parentNode.querySelectorAll('input')
+                        let selectAllCheckBoxes = selectAll[index].parentNode.parentNode.parentNode.querySelectorAll('input')
                         for(let jIndex = 0; jIndex < selectAllCheckBoxes.length; jIndex++) {
                             selectAllCheckBoxes[jIndex].checked = true
                         }
@@ -354,7 +419,7 @@
                 let removeAll = document.querySelectorAll('.removeAll')
                 for (let index = 0; index < removeAll.length; index++) {
                     removeAll[index].addEventListener('click', function() {
-                        let removeAllCheckBoxes = removeAll[index].parentNode.parentNode.querySelectorAll('input')
+                        let removeAllCheckBoxes = removeAll[index].parentNode.parentNode.parentNode.querySelectorAll('input')
                         for(let jIndex = 0; jIndex < removeAllCheckBoxes.length; jIndex++) {
                             removeAllCheckBoxes[jIndex].checked = false
                         }
@@ -480,7 +545,7 @@
 
                                             iAr.push(i);
                                         })
-                                    }, 15000 * i);
+                                    }, 5000 * i);
                                 }
                             })      
                         } else {
@@ -497,9 +562,9 @@
                                 if(typesAr.find(typeElem => typeElem.includes(j))) {
                                     for (let k = 0; k < typesAr.length; k++) {
                                         if(typesAr[k][0] == j && typesAr[k][1] !== 'items')
-                                            elems = elems.concat(types[j][typesAr[k][1]]['items']);
+                                            elems = elems.concat(types[j][typesAr[k][2]][typesAr[k][1]]['items']);
                                         else if(typesAr[k][0] == j && typesAr[k][1] == 'items')
-                                            elems = elems.concat(types[j]['items']);
+                                            elems = elems.concat(types[j][typesAr[k][2]]['items']);
                                     }
                                 }
                             }
@@ -561,7 +626,7 @@
                                         type: "POST",
                                         url: elemUrl,
                                         data: elems[i],
-                                    }).done(res => {
+                                    }).then(res => {
                                         var count = document.getElementById("count");
                                         count.width = 500;
                                         count.height = 30;
@@ -591,12 +656,16 @@
                                         Count.draw();
                                         document.querySelector('span.count').textContent = (iAr.length + 1) + ' из ' + elems.length
 
+                                        console.log(iAr.length, elems.length - 1, i);
+
                                         if(iAr.length == elems.length - 1) {
-                                            countList.classList.add('hidden');
-                                            btn.classList.remove('hidden');
-                                            back.classList.remove('hidden');
-                                            if(elems__arr)
-                                                elems__arr.classList.remove('hidden')
+                                            setTimeout(() => {
+                                                countList.classList.add('hidden');
+                                                btn.classList.remove('hidden');
+                                                back.classList.remove('hidden');
+                                                if(elems__arr)
+                                                    elems__arr.classList.remove('hidden')
+                                            }, 1000);
                                         }
 
                                         iAr.push(i);
@@ -656,8 +725,16 @@
                 margin-right: 10px;
                 width: 75px;
             }
-            #analysis__content .selectZone {
+            #analysis__content .element__block > .element__block {
                 margin-bottom: 10px;
+            }
+            #analysis__content .select-zone__block {
+                margin-bottom: 10px;
+                display: flex;
+                align-items: center;
+            }
+            #analysis__content .selectZone {
+                margin-left: 10px;
             }
             #analysis__content .selectZone > span {
                 border-bottom: 3px dotted #000;

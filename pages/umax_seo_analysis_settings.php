@@ -23,12 +23,19 @@ if (!Loader::includeModule('umax.seoanalysis') || \UmaxAnalysisDataManager::isDe
             'TITLE' => $arBlocks['NAME'],
         ];
     }
-    $seo = UmaxSeoSettingsTable::getList()->Fetch();
+    $seo = UmaxSeoSettingsTable::getList()->FetchAll();
     ?>
     <?if($_POST):?>
         <?
+            UmaxSeoSettingsTable::clear();
+            $postAr = [];
             foreach ($_POST as $key => $value) {
-                $_POST[$key] = intval($value);
+                foreach($value as $block) {
+                    $postAr[] = [
+                        'TYPE' => $key,
+                        'IBLOCK_ID' => $block
+                    ];
+                }
             }
             $allSet = UmaxSeoSettingsTable::getList()->fetch();
             unset($allSet['ID']);
@@ -41,35 +48,44 @@ if (!Loader::includeModule('umax.seoanalysis') || \UmaxAnalysisDataManager::isDe
                     ]);
                 }                
             }
-            UmaxSeoSettingsTable::createOrUpdate($_POST);
+            UmaxSeoSettingsTable::addMultiple($postAr);
             LocalRedirect($APPLICATION->GetCurPage());
         ?>
     <?endif;?>
     <form action="<?=$APPLICATION->GetCurPage()?>" method="post">
         <div class="select__block">
             <span>Каталог</span>
-            <select required name="GOODS">
-                <option value="" selected></option>
+            <select multiple name="GOODS[]">
+                <option value="" <?if(!array_key_exists(array_search('GOODS', array_column($seo, 'TYPE')), $seo)):?>selected<?endif;?>></option>
                 <?foreach ($iblocks as $iblock):?>
-                    <option <?if($seo['GOODS'] == $iblock['ID']):?>selected<?endif;?> value="<?=$iblock['ID']?>"><?=$iblock['TITLE']?></option>
+                    <?
+                        $exist = array_search($iblock['ID'], array_column($seo, 'IBLOCK_ID'));    
+                    ?>
+                    <option <?if(array_key_exists($exist, $seo) && $seo[$exist]['TYPE'] == 'GOODS'):?>selected<?endif;?> value="<?=$iblock['ID']?>"><?=$iblock['TITLE']?></option>
                 <?endforeach;?>
             </select>
         </div>
         <div class="select__block">
             <span>Услуги</span>
-            <select required name="SERVICE">
-                <option value="" selected></option>
+            <select multiple name="SERVICE[]">
+                <option value="" <?if(!array_key_exists(array_search('SERVICE', array_column($seo, 'TYPE')), $seo)):?>selected<?endif;?>></option>
                 <?foreach ($iblocks as $iblock):?>
-                    <option <?if($seo['SERVICE'] == $iblock['ID']):?>selected<?endif;?> value="<?=$iblock['ID']?>"><?=$iblock['TITLE']?></option>
+                    <?
+                        $exist = array_search($iblock['ID'], array_column($seo, 'IBLOCK_ID'));    
+                    ?>
+                    <option <?if(array_key_exists($exist, $seo) && $seo[$exist]['TYPE'] == 'SERVICE'):?>selected<?endif;?> value="<?=$iblock['ID']?>"><?=$iblock['TITLE']?></option>
                 <?endforeach;?>
             </select>
         </div>
         <div class="select__block">
             <span>Статьи</span>
-            <select required name="NEWS">
-                <option value="" selected></option>
+            <select multiple name="NEWS[]">
+                <option value="" <?if(!array_key_exists(array_search('NEWS', array_column($seo, 'TYPE')), $seo)):?>selected<?endif;?>></option>
                 <?foreach ($iblocks as $iblock):?>
-                    <option <?if($seo['NEWS'] == $iblock['ID']):?>selected<?endif;?> value="<?=$iblock['ID']?>"><?=$iblock['TITLE']?></option>
+                    <?
+                        $exist = array_search($iblock['ID'], array_column($seo, 'IBLOCK_ID'));    
+                    ?>
+                    <option <?if(array_key_exists($exist, $seo) && $seo[$exist]['TYPE'] == 'NEWS'):?>selected<?endif;?> value="<?=$iblock['ID']?>"><?=$iblock['TITLE']?></option>
                 <?endforeach;?>
             </select>
         </div>
