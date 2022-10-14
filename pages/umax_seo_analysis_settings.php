@@ -56,7 +56,7 @@ if (!Loader::includeModule('umax.seoanalysis') || \UmaxAnalysisDataManager::isDe
     <?endif;?>
     <form action="<?=$APPLICATION->GetCurPage()?>" method="post">
         <div class="select__block">
-            <span>Каталог</span>
+            <span>Товары</span>
             <div class="checkbox-wrap">
                 <?foreach ($iblocks as $iblock):?>
                     <?
@@ -106,7 +106,11 @@ if (!Loader::includeModule('umax.seoanalysis') || \UmaxAnalysisDataManager::isDe
             flex-direction: column;
             width: 500px;
             margin-bottom: 10px;
-            font-family: 'Mont'
+            font-family: 'Mont';
+            border: 1px solid #3d3d3d;
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 30px;
         }
         .select__block span {
             margin-bottom: 5px;
@@ -121,4 +125,4 @@ if (!Loader::includeModule('umax.seoanalysis') || \UmaxAnalysisDataManager::isDe
     $APPLICATION->SetTitle('Настройка');
 }
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin.php");
-?>  
+?>
