@@ -37,33 +37,51 @@ if (!Loader::includeModule('umax.seoanalysis') || \UmaxAnalysisDataManager::isDe
                 }
             }
             $allSet = UmaxSeoSettingsTable::getList()->FetchAll();
-            unset($allSet['ID']);
             foreach ($allSet as $k => $v) {
-                if(intval($allSet[$k]['IBLOCK_ID']) !== intval($postAr[$k]['IBLOCK_ID'])) {
+                unset($allSet[$k]['ID']);
+            }
+            $allSetAr = [];
+            foreach($postAr as $k => $v) {
+                $allSetAr[$v['TYPE'] . '_' . $v['IBLOCK_ID']] = $v;
+            }
+            foreach($allSet as $k => $v) {
+                if(!array_key_exists($v['TYPE'] . '_' . $v['IBLOCK_ID'], $allSetAr)) {
+                    
                     UmaxSeoOnPageElementTable::clear([
                         'filter' => [
-                            'IBLOCK_TYPE' => $allSet[$k]['TYPE'],
-                            'IBLOCK_ID' => $allSet[$k]['IBLOCK_ID']
+                            'IBLOCK_TYPE' => $v['TYPE'],
+                            'IBLOCK_ID' => $v['IBLOCK_ID']
                         ]
                     ]);
-                    unset($postAr[$k]);
-                    UmaxSeoSettingsTable::delete($allSet[$k]['ID']);
+                    $curSet = UmaxSeoSettingsTable::getList([
+                        'filter' => [
+                            'TYPE' => $v['TYPE'],
+                            'IBLOCK_ID' => $v['IBLOCK_ID']
+                        ]])->Fetch();
+
+                    UmaxSeoSettingsTable::delete($curSet['ID']);
                 }
             }
-            UmaxSeoSettingsTable::addMultiple($postAr);
+            foreach($allSetAr as $key => $value) {
+                if(in_array($value, $allSet))
+                    unset($allSetAr[$key]);
+            }
+            if(count($allSetAr) > 0) {
+                UmaxSeoSettingsTable::addMultiple($allSetAr);
+            }
             LocalRedirect($APPLICATION->GetCurPage());
         ?>
     <?endif;?>
     <form action="<?=$APPLICATION->GetCurPage()?>" method="post">
         <div class="select__block">
-            <span>Товары</span>
+            <span>Каталог</span>
             <div class="checkbox-wrap">
                 <?foreach ($iblocks as $iblock):?>
                     <?
                         $exist = array_search($iblock['ID'], array_column($seo, 'IBLOCK_ID'));    
                     ?>
                     <div>
-                        <input type="checkbox" name="GOODS[]" <?if(array_key_exists($exist, $seo) && $seo[$exist]['TYPE'] == 'GOODS'):?>checked<?endif;?> value="<?=$iblock['ID']?>" id="GOODS-<?=$iblock['ID']?>">
+                        <input type="checkbox" name="GOODS[]" <?if(gettype($exist) == 'integer'): if(array_key_exists($exist, $seo) && $seo[$exist]['TYPE'] == 'GOODS'):?>checked<?endif;endif;?> value="<?=$iblock['ID']?>" id="GOODS-<?=$iblock['ID']?>">
                         <label for="GOODS-<?=$iblock['ID']?>"><?=$iblock['TITLE']?></label>
                     </div>
                 <?endforeach;?>
@@ -77,7 +95,7 @@ if (!Loader::includeModule('umax.seoanalysis') || \UmaxAnalysisDataManager::isDe
                         $exist = array_search($iblock['ID'], array_column($seo, 'IBLOCK_ID'));    
                     ?>
                     <div>
-                        <input type="checkbox" name="SERVICE[]" <?if(array_key_exists($exist, $seo) && $seo[$exist]['TYPE'] == 'SERVICE'):?>checked<?endif;?> value="<?=$iblock['ID']?>" id="SERVICE-<?=$iblock['ID']?>">
+                        <input type="checkbox" name="SERVICE[]" <?if(gettype($exist) == 'integer'): if(array_key_exists($exist, $seo) && $seo[$exist]['TYPE'] == 'SERVICE'):?>checked<?endif;endif;?> value="<?=$iblock['ID']?>" id="SERVICE-<?=$iblock['ID']?>">
                         <label for="SERVICE-<?=$iblock['ID']?>"><?=$iblock['TITLE']?></label>
                     </div>
                 <?endforeach;?>
@@ -91,7 +109,7 @@ if (!Loader::includeModule('umax.seoanalysis') || \UmaxAnalysisDataManager::isDe
                         $exist = array_search($iblock['ID'], array_column($seo, 'IBLOCK_ID'));    
                     ?>
                     <div>
-                        <input type="checkbox" name="NEWS[]" <?if(array_key_exists($exist, $seo) && $seo[$exist]['TYPE'] == 'NEWS'):?>checked<?endif;?> value="<?=$iblock['ID']?>" id="NEWS-<?=$iblock['ID']?>">
+                        <input type="checkbox" name="NEWS[]" <?if(gettype($exist) == 'integer'): if(array_key_exists($exist, $seo) && $seo[$exist]['TYPE'] == 'NEWS'):?>checked<?endif;endif;?> value="<?=$iblock['ID']?>" id="NEWS-<?=$iblock['ID']?>">
                         <label for="NEWS-<?=$iblock['ID']?>"><?=$iblock['TITLE']?></label>
                     </div>
                 <?endforeach;?>
@@ -99,7 +117,7 @@ if (!Loader::includeModule('umax.seoanalysis') || \UmaxAnalysisDataManager::isDe
         </div>
         <input type="submit" value="Сохранить">
     </form>
-        <link rel="stylesheet" href="/bitrix/modules/umax.seoanalysis/lib/assets/fonts.css">
+    <link rel="stylesheet" href="/bitrix/themes/.default/umax.seoanalysis/fonts.css">
     <style>
         .select__block {
             display: flex;

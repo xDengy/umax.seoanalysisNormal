@@ -306,7 +306,7 @@
             $settingAr = json_encode($settingAr);
         ?>
         <script src="https://code.jquery.com/jquery-3.5.0.js"></script>
-        <link rel="stylesheet" href="/bitrix/modules/umax.seoanalysis/lib/assets/fonts.css">
+        <link rel="stylesheet" href="/bitrix/themes/.default/umax.seoanalysis/fonts.css">
         <script>
             function drawLine(ctx, startX, startY, endX, endY,color){
                 ctx.save();
@@ -429,7 +429,7 @@
                 }
 
                 let btn = document.querySelector('.download__btn#start')
-                btn.addEventListener('click', function() {
+                btn?.addEventListener('click', function() {
                     let pagesAr = document.querySelectorAll('.pages__arr')
                     if(pagesAr.length > 0) {
                         pages = [];
@@ -447,6 +447,7 @@
                             $.ajax({
                                 type: "POST",
                                 url: '/bitrix/admin/umax_global_analysis_empty.php',
+                                async: false,
                                 data: {
                                     <?if($_GET['detail']):?>
                                         pages: pages
@@ -459,6 +460,35 @@
                                 let pages__arr = document.querySelector('#pages__arr')
                                 let metaCommerce = document.querySelector('.metaCommerce')
                                 var iAr = [];
+
+                                var count1 = document.getElementById("count");
+                                count1.width = 500;
+                                count1.height = 30;
+                                var ctxCount1 = count1.getContext("2d");
+
+                                var metaObj1 = {
+                                    'obj': {
+                                        'calc': 0,
+                                        '100calc': 100,
+                                    },
+                                };
+
+                                var Count1 = new Barchart(
+                                {
+                                    canvas:count1,
+                                    seriesName:"",
+                                    id:'count',
+                                    padding:0,
+                                    gridScale:5,
+                                    horizontal: true,
+                                    gridColor:"#fff",
+                                    maxValue: 100,
+                                    data: metaObj1,
+                                    colors:["#56C400", "#C3C3C3"]
+                                })
+                                Count1.draw();
+                                document.querySelector('span.count').textContent = '0 из ' + pages.length
+
                                 for(let i = 0; i < pages.length; i++) {
                                     if(iAr.length == 0) {
                                         btn?.classList.add('hidden');
@@ -469,33 +499,6 @@
                                         if(pages__arr)
                                             pages__arr?.classList.add('hidden')
                                     }
-                                    var count1 = document.getElementById("count");
-                                    count1.width = 500;
-                                    count1.height = 30;
-                                    var ctxCount1 = count1.getContext("2d");
-
-                                    var metaObj1 = {
-                                        'obj': {
-                                            'calc': 0,
-                                            '100calc': 100,
-                                        },
-                                    };
-
-                                    var Count1 = new Barchart(
-                                    {
-                                        canvas:count1,
-                                        seriesName:"",
-                                        id:'count',
-                                        padding:0,
-                                        gridScale:5,
-                                        horizontal: true,
-                                        gridColor:"#fff",
-                                        maxValue: 100,
-                                        data: metaObj1,
-                                        colors:["#56C400", "#C3C3C3"]
-                                    })
-                                    Count1.draw();
-                                    document.querySelector('span.count').textContent = 0 + ' из ' + pages.length
                                     
                                     setTimeout(() => {
                                         $.ajax({
@@ -545,12 +548,12 @@
                                                     seo?.classList.remove('hidden');
                                                     if(pages__arr)
                                                         pages__arr?.classList.remove('hidden')
-                                                }, 2500);
+                                                }, 1000);
                                             }
 
                                             iAr.push(i);
                                         })
-                                    }, 5000 * i);
+                                    }, 1000 * i);
                                 }
                             })      
                         } else {
@@ -578,6 +581,35 @@
                             let elems__arr = document.querySelector('#elems__arr')
                             let metaCommerce = document.querySelector('.metaCommerce')
                             var iAr = [];
+
+                            var count1 = document.getElementById("count");
+                            count1.width = 500;
+                            count1.height = 30;
+                            var ctxCount1 = count1.getContext("2d");
+
+                            var metaObj1 = {
+                                'obj': {
+                                    'calc': 0,
+                                    '100calc': 100,
+                                },
+                            };
+
+                            var Count1 = new Barchart(
+                            {
+                                canvas:count1,
+                                seriesName:"",
+                                id:'count',
+                                padding:0,
+                                gridScale:5,
+                                horizontal: true,
+                                gridColor:"#fff",
+                                maxValue: 100,
+                                data: metaObj1,
+                                colors:["#56C400", "#C3C3C3"]
+                            })
+                            Count1.draw();
+                            document.querySelector('span.count').textContent = '0 из ' + elems.length
+
                             for(let i = 0; i < elems.length; i++) {
                                 if(iAr.length == 0) {
                                     btn.classList.add('hidden');
@@ -587,32 +619,6 @@
                                     if(elems__arr)
                                         elems__arr.classList.add('hidden')
                                 }
-                                var count1 = document.getElementById("count");
-                                count1.width = 500;
-                                count1.height = 30;
-                                var ctxCount1 = count1.getContext("2d");
-
-                                var metaObj1 = {
-                                    'obj': {
-                                        'calc': 0,
-                                        '100calc': 100,
-                                    },
-                                };
-
-                                var Count1 = new Barchart(
-                                {
-                                    canvas:count1,
-                                    seriesName:"",
-                                    id:'count',
-                                    padding:0,
-                                    gridScale:5,
-                                    horizontal: true,
-                                    gridColor:"#fff",
-                                    maxValue: 100,
-                                    data: metaObj1,
-                                    colors:["#56C400", "#C3C3C3"]
-                                })
-                                Count1.draw();
 
                                 var elemUrl = false
                                 var text = ''
@@ -633,6 +639,7 @@
                                         type: "POST",
                                         url: elemUrl,
                                         data: elems[i],
+                                        async: false
                                     }).then(res => {
                                         var count = document.getElementById("count");
                                         count.width = 500;
@@ -676,7 +683,7 @@
 
                                         iAr.push(i);
                                     })
-                                }, 10000 * i);
+                                }, 1000 * i);
                             }
                         }
                     }

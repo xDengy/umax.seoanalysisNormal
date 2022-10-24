@@ -57,7 +57,7 @@ document.addEventListener('DOMContentLoaded', function(){
     }
 
     let scroll = document.querySelector('.seoOnPage__scroll')
-    scroll.addEventListener('click', function() {
+    scroll?.addEventListener('click', function() {
         let start = document.querySelector('.adm-workarea')
         start.scrollIntoView({
             behavior: 'smooth',

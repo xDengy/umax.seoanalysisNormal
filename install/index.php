@@ -23,7 +23,7 @@ Class umax_seoanalysis extends CModule
       $this->MODULE_VERSION_DATE = $arModuleVersion["VERSION_DATE"];
     }
     
-    $this->MODULE_NAME = "SEO аналитика для CMS - Bitrix";
+    $this->MODULE_NAME = "SEO анализ сайта для Bitix от UMAX, SEO OnPage - одностраничная оптимизация";
     $this->MODULE_DESCRIPTION = "Аналитика элементов инфоблоков";
   }
 
@@ -94,8 +94,11 @@ Class umax_seoanalysis extends CModule
   }
 
   function InstallFiles()
-  { 
+  {
     CopyDirFiles($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/umax.seoanalysis/install/css",
+                $_SERVER["DOCUMENT_ROOT"]."/bitrix/themes/.default", true, true);
+
+    CopyDirFiles($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/umax.seoanalysis/install/moduleAssets",
                 $_SERVER["DOCUMENT_ROOT"]."/bitrix/themes/.default", true, true);
 
     CopyDirFiles($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/umax.seoanalysis/install/images",
@@ -107,10 +110,8 @@ Class umax_seoanalysis extends CModule
 
   function UnInstallFiles()
   {
-    CopyDirFiles($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/umax.seoanalysis/install/css",
-                $_SERVER["DOCUMENT_ROOT"]."/bitrix/themes/.default", true, true);
-
     DeleteDirFilesEx("/bitrix/themes/.default/icons/umax.seoanalysis");
+    rmdir('/bitrix/themes/.default/umax.seoanalysis');
     unlink($_SERVER["DOCUMENT_ROOT"].'/bitrix/themes/.default/umax.seoanalysis.css');
 
     unlink($_SERVER["DOCUMENT_ROOT"].'/bitrix/admin/umax_global_analysis_ajax.php');
