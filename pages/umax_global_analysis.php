@@ -23,10 +23,14 @@ if (!Loader::includeModule('umax.seoanalysis') || \UmaxAnalysisDataManager::isDe
     $isEmpty = UmaxSeoAnalysisTable::checkIfEmpty($seotable);
     $summaryImages = UmaxImagesTable::getFilledImages();
 
-    $date = date_create($seotable['DATE_CHANGE']);
-    $date = date_format($date,"H:i:s d-m-Y");
-
     $seoOnPage['ALL'] = UmaxSeoOnPageElementTable::getList()->FetchAll();
+
+    $seoOnPage['NORMAL'] = UmaxSeoOnPageElementTable::getList([
+        'filter' => [
+            '>FULL_VALUE' => 74
+        ]
+    ])->FetchAll();
+
     $seoOnPage['GOODS'] = UmaxSeoOnPageElementTable::getList([
         'filter' => [
             'IBLOCK_TYPE' => 'GOODS'
@@ -83,6 +87,10 @@ if (!Loader::includeModule('umax.seoanalysis') || \UmaxAnalysisDataManager::isDe
                     <path d="M7.5 4.375C7.5 4.20924 7.56585 4.05027 7.68306 3.93306C7.80027 3.81585 7.95924 3.75 8.125 3.75C8.29076 3.75 8.44973 3.81585 8.56694 3.93306C8.68415 4.05027 8.75 4.20924 8.75 4.375V7.5C8.75 7.66576 8.68415 7.82473 8.56694 7.94194C8.44973 8.05915 8.29076 8.125 8.125 8.125C7.95924 8.125 7.80027 8.05915 7.68306 7.94194C7.56585 7.82473 7.5 7.66576 7.5 7.5V4.375ZM16.25 4.375C16.25 4.20924 16.3158 4.05027 16.4331 3.93306C16.5503 3.81585 16.7092 3.75 16.875 3.75C17.0408 3.75 17.1997 3.81585 17.3169 3.93306C17.4342 4.05027 17.5 4.20924 17.5 4.375V7.5C17.5 7.66576 17.4342 7.82473 17.3169 7.94194C17.1997 8.05915 17.0408 8.125 16.875 8.125C16.7092 8.125 16.5503 8.05915 16.4331 7.94194C16.3158 7.82473 16.25 7.66576 16.25 7.5V4.375Z" fill="black"/>
                 </svg>
                 <?if($isEmpty == false):?>
+                    <?
+                        $date = date_create($seotable['DATE_CHANGE']);
+                        $date = date_format($date,"H:i:s d-m-Y");
+                    ?>
                     <span class="date__text">
                         <?=$date?>
                     </span>
@@ -332,7 +340,7 @@ if (!Loader::includeModule('umax.seoanalysis') || \UmaxAnalysisDataManager::isDe
     </div>
     <script lang="javascript" src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
     <script lang="javascript" src="https://html2canvas.hertzen.com/dist/html2canvas.js"></script>
-    <link rel="stylesheet" href="/bitrix/modules/umax.seoanalysis/lib/assets/fonts.css">
+    <link rel="stylesheet" href="/bitrix/themes/.default/umax.seoanalysis/fonts.css">
     <?if($isEmpty == false):?>
         <script>
             document.querySelector('#allXLS').addEventListener('click', function() {
@@ -474,14 +482,14 @@ if (!Loader::includeModule('umax.seoanalysis') || \UmaxAnalysisDataManager::isDe
                             this.ctx.beginPath(); 
 
                             if(i !== 0 && i !== 5) {
-                                this.ctx.moveTo(i * 95 + 90 + i * 17.5 + 25 / 2, 160); 
-                                this.ctx.lineTo(i * 95 + 90 + i * 17.5 + 25 / 2, 30); 
+                                this.ctx.moveTo(i * 95 + 120 + i * 17.5 + 25 / 2, 160); 
+                                this.ctx.lineTo(i * 95 + 120 + i * 17.5 + 25 / 2, 30); 
                             } else if (i == 0) {
-                                this.ctx.moveTo(i * 95 + 90 + i * 17.5 + 6, 160); 
-                                this.ctx.lineTo(i * 95 + 90 + i * 17.5 + 6, 30); 
+                                this.ctx.moveTo(i * 95 + 120 + i * 17.5 + 6, 160); 
+                                this.ctx.lineTo(i * 95 + 120 + i * 17.5 + 6, 30); 
                             } else {
-                                this.ctx.moveTo(i * 95 + 90 + i * 17.5 + i * 4.5, 160); 
-                                this.ctx.lineTo(i * 95 + 90 + i * 17.5 + i * 4.5, 30); 
+                                this.ctx.moveTo(i * 95 + 120 + i * 17.5 + i * 4.5, 160); 
+                                this.ctx.lineTo(i * 95 + 120 + i * 17.5 + i * 4.5, 30); 
                             }
                             
                             this.ctx.stroke(); 
@@ -855,7 +863,7 @@ if (!Loader::includeModule('umax.seoanalysis') || \UmaxAnalysisDataManager::isDe
             var ctx = myCanvas.getContext("2d");
 
             var meta = document.getElementById("meta");
-            meta.width = 794;
+            meta.width = 850;
             meta.height = 200;
 
             var ctxMeta = meta.getContext("2d");
@@ -909,7 +917,7 @@ if (!Loader::includeModule('umax.seoanalysis') || \UmaxAnalysisDataManager::isDe
                 
 
             var analysis = {
-                "SEO onPage": Math.round((<?=count($seoOnPage['ALL'])?> * 100) / <?=$seotable['SUMMARY_INDEX']?>),
+                "SEO onPage": Math.round((<?=count($seoOnPage['NORMAL'])?> * 100) / <?=count($seoOnPage['ALL'])?>),
                 "Коммерция": <?=$seotable['SUMMARY_COMMERCE']?>,
                 "Индексация": Math.round((<?=$seotable['PAGES_INDEX']?> * 100) / <?=$seotable['SUMMARY_INDEX']?>),
                 "Мета-теги": metaResult,
@@ -1032,8 +1040,6 @@ if (!Loader::includeModule('umax.seoanalysis') || \UmaxAnalysisDataManager::isDe
                 }
             );
             Page.draw();
-
-            console.log(<?=$seotable['INDEX_CLOSED']?> + <?=$seotable['INDEX_META_ROBOTS']?> + <?=$seotable['INDEX_CANONICAL']?> + <?=$seotable['INDEX_NOT_GET']?>, <?=$seotable['PAGES_INDEX']?>);
 
             var indexObj = {
                 "Закрыты в robots.txt": <?=$seotable['INDEX_CLOSED']?>,
@@ -1361,13 +1367,11 @@ if (!Loader::includeModule('umax.seoanalysis') || \UmaxAnalysisDataManager::isDe
             line-height: 20px;
         }
         #analysis #summary, #analysis #metaElement {
-            width: 794px;
+            width: 56%;
         }
-
         #analysis legend[for="myCanvas"] .info__element {
             margin-bottom: 13px;
         }
-
         #analysis legend[for="meta"] div.info__element {
             padding: 7.5px !important;
         }
@@ -1375,7 +1379,10 @@ if (!Loader::includeModule('umax.seoanalysis') || \UmaxAnalysisDataManager::isDe
             margin-bottom: 5px;
         }
         #analysis .main__element {
-            width: 34.35%;
+            width: 35%;
+        }
+        #analysis .content__canvas#meta {
+            align-self: center;
         }
         #analysis .element__popup {
             position: absolute;

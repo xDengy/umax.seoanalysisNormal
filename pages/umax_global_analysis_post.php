@@ -20,6 +20,7 @@
 
         $i = 0;
         $pages = [];
+        $sitemap = [];
         while(true) {
             if($i == 0)
                 $sitemapIndex = '';
@@ -31,12 +32,26 @@
                 $sitemapfile = file_get_contents($name); 
                 $xml = simplexml_load_string($sitemapfile);
                 $con = json_decode(json_encode($xml), true);
-                $pages = array_merge($pages, array_map('getUrls', $con['url']));
+                if(array_key_exists('url', $con))
+                    $pages = array_merge($pages, array_map('getUrls', $con['url']));
+                else {
+                    $sitemap = array_merge($sitemap, array_map('getUrls', $con['sitemap']));
+                }
             } else {
                 break;
             }
             $i++;
         }
+        if(count($sitemap) > 0) {
+            foreach ($sitemap as $key => $value) {
+                $sitemapfile = file_get_contents($value); 
+                $xml = simplexml_load_string($sitemapfile);
+                $con = json_decode(json_encode($xml), true);
+                if(array_key_exists('url', $con))
+                    $pages = array_merge($pages, array_map('getUrls', $con['url']));
+            }
+        }
+        
         $settings = UmaxSeoSettingsTable::getList()->FetchAll();
 
         $settingAr = [];
@@ -442,250 +457,258 @@
                         seo = true
                     <?endif?>
 
-                    if(pages.length > 0) {
-                        if(!seo) {
-                            $.ajax({
-                                type: "POST",
-                                url: '/bitrix/admin/umax_global_analysis_empty.php',
-                                async: false,
-                                data: {
-                                    <?if($_GET['detail']):?>
-                                        pages: pages
-                                    <?endif?>
+                    if(seo) {
+                        let elemsAr = document.querySelectorAll('.elems__arr')
+                        if(elemsAr.length > 0) {
+                            typesAr = [];
+                            $('#analysis__content .elems__arr input:checked').each((key, element) => {
+                                typesAr.push(element.id.split('-'))
+                            });
+                        }
+                        let k = 0;
+                        let elems = [];
+                        for (let j in types) {
+                            if(typesAr.find(typeElem => typeElem.includes(j))) {
+                                for (let k = 0; k < typesAr.length; k++) {
+                                    if(typesAr[k][0] == j && typesAr[k][1] !== 'items')
+                                        elems = elems.concat(types[j][typesAr[k][2]][typesAr[k][1]]['items']);
+                                    else if(typesAr[k][0] == j && typesAr[k][1] == 'items')
+                                        elems = elems.concat(types[j][typesAr[k][2]]['items']);
                                 }
-                            }).done(empty => {
-                                let countList = document.querySelector('.count__list')
-                                let detail = document.querySelector('.download__btn#detail')
-                                let seo = document.querySelector('.download__btn#seo')
-                                let pages__arr = document.querySelector('#pages__arr')
-                                let metaCommerce = document.querySelector('.metaCommerce')
-                                var iAr = [];
-
-                                var count1 = document.getElementById("count");
-                                count1.width = 500;
-                                count1.height = 30;
-                                var ctxCount1 = count1.getContext("2d");
-
-                                var metaObj1 = {
-                                    'obj': {
-                                        'calc': 0,
-                                        '100calc': 100,
-                                    },
-                                };
-
-                                var Count1 = new Barchart(
-                                {
-                                    canvas:count1,
-                                    seriesName:"",
-                                    id:'count',
-                                    padding:0,
-                                    gridScale:5,
-                                    horizontal: true,
-                                    gridColor:"#fff",
-                                    maxValue: 100,
-                                    data: metaObj1,
-                                    colors:["#56C400", "#C3C3C3"]
-                                })
-                                Count1.draw();
-                                document.querySelector('span.count').textContent = '0 из ' + pages.length
-
-                                for(let i = 0; i < pages.length; i++) {
-                                    if(iAr.length == 0) {
-                                        btn?.classList.add('hidden');
-                                        metaCommerce?.classList.add('hidden');
-                                        detail?.classList.add('hidden');
-                                        seo?.classList.add('hidden');
-                                        countList?.classList.remove('hidden');
-                                        if(pages__arr)
-                                            pages__arr?.classList.add('hidden')
-                                    }
-                                    
-                                    setTimeout(() => {
-                                        $.ajax({
-                                            type: "POST",
-                                            url: '/bitrix/admin/umax_global_analysis_ajax.php',
-                                            data: {
-                                                page: pages[i],
-                                                id: i,
-                                                length: pages.length
-                                            },
-                                        }).done(res => {
-                                            var count = document.getElementById("count");
-                                            count.width = 500;
-                                            count.height = 30;
-
-                                            var ctxCount = count.getContext("2d");
-
-                                            var metaObj = {
-                                                'obj': {
-                                                    'calc': Math.floor(((iAr.length + 1) * 100) / pages.length),
-                                                    '100calc': 100 - Math.floor(((iAr.length + 1) * 100) / pages.length),
-                                                },
-                                            };
-
-                                            var Count = new Barchart(
-                                            {
-                                                canvas:count,
-                                                seriesName:"",
-                                                id:'count',
-                                                padding:0,
-                                                gridScale:5,
-                                                horizontal: true,
-                                                gridColor:"#fff",
-                                                maxValue: 100,
-                                                data: metaObj,
-                                                colors:["#56C400", "#C3C3C3"]
-                                            })
-                                            Count.draw();
-                                            document.querySelector('span.count').textContent = (iAr.length + 1) + ' из ' + pages.length
-
-                                            if(iAr.length == pages.length - 1) {
-                                                setTimeout(() => {
-                                                    countList?.classList.add('hidden');
-                                                    btn?.classList.remove('hidden');
-                                                    metaCommerce?.classList.remove('hidden');
-                                                    detail?.classList.remove('hidden');
-                                                    seo?.classList.remove('hidden');
-                                                    if(pages__arr)
-                                                        pages__arr?.classList.remove('hidden')
-                                                }, 1000);
-                                            }
-
-                                            iAr.push(i);
-                                        })
-                                    }, 1000 * i);
-                                }
-                            })      
-                        } else {
-                            let elemsAr = document.querySelectorAll('.elems__arr')
-                            if(elemsAr.length > 0) {
-                                typesAr = [];
-                                $('#analysis__content .elems__arr input:checked').each((key, element) => {
-                                    typesAr.push(element.id.split('-'))
-                                });
-                            }
-                            let k = 0;
-                            let elems = [];
-                            for (let j in types) {
-                                if(typesAr.find(typeElem => typeElem.includes(j))) {
-                                    for (let k = 0; k < typesAr.length; k++) {
-                                        if(typesAr[k][0] == j && typesAr[k][1] !== 'items')
-                                            elems = elems.concat(types[j][typesAr[k][2]][typesAr[k][1]]['items']);
-                                        else if(typesAr[k][0] == j && typesAr[k][1] == 'items')
-                                            elems = elems.concat(types[j][typesAr[k][2]]['items']);
-                                    }
-                                }
-                            }
-                            let countList = document.querySelector('.count__list')
-                            let back = document.querySelector('.download__btn#back')
-                            let elems__arr = document.querySelector('#elems__arr')
-                            let metaCommerce = document.querySelector('.metaCommerce')
-                            var iAr = [];
-
-                            var count1 = document.getElementById("count");
-                            count1.width = 500;
-                            count1.height = 30;
-                            var ctxCount1 = count1.getContext("2d");
-
-                            var metaObj1 = {
-                                'obj': {
-                                    'calc': 0,
-                                    '100calc': 100,
-                                },
-                            };
-
-                            var Count1 = new Barchart(
-                            {
-                                canvas:count1,
-                                seriesName:"",
-                                id:'count',
-                                padding:0,
-                                gridScale:5,
-                                horizontal: true,
-                                gridColor:"#fff",
-                                maxValue: 100,
-                                data: metaObj1,
-                                colors:["#56C400", "#C3C3C3"]
-                            })
-                            Count1.draw();
-                            document.querySelector('span.count').textContent = '0 из ' + elems.length
-
-                            for(let i = 0; i < elems.length; i++) {
-                                if(iAr.length == 0) {
-                                    btn.classList.add('hidden');
-                                    metaCommerce.classList.add('hidden');
-                                    back.classList.add('hidden');
-                                    countList.classList.remove('hidden');
-                                    if(elems__arr)
-                                        elems__arr.classList.add('hidden')
-                                }
-
-                                var elemUrl = false
-                                var text = ''
-
-                                setTimeout(() => {
-                                    if(elems[i].type == 'GOODS') {
-                                        elemUrl = '/bitrix/admin/umax_global_analysis_ajax_detail_goods.php'
-                                    }
-                                    else if(elems[i].type == 'SERVICE') {
-                                        elemUrl = '/bitrix/admin/umax_global_analysis_ajax_detail_services.php'
-                                    }
-                                    else if(elems[i].type == 'NEWS') {
-                                        elemUrl = '/bitrix/admin/umax_global_analysis_ajax_detail_news.php'
-                                    }
-                                    if(iAr.length == 0)
-                                        document.querySelector('span.count').textContent = 0 + ' из ' + elems.length
-                                    $.ajax({
-                                        type: "POST",
-                                        url: elemUrl,
-                                        data: elems[i],
-                                        async: false
-                                    }).then(res => {
-                                        var count = document.getElementById("count");
-                                        count.width = 500;
-                                        count.height = 30;
-
-                                        var ctxCount = count.getContext("2d");
-
-                                        var metaObj = {
-                                            'obj': {
-                                                'calc': Math.floor(((iAr.length + 1) * 100) / elems.length),
-                                                '100calc': 100 - Math.floor(((iAr.length + 1) * 100) / elems.length),
-                                            },
-                                        };
-
-                                        var Count = new Barchart(
-                                        {
-                                            canvas:count,
-                                            seriesName:"",
-                                            id:'count',
-                                            padding:0,
-                                            gridScale:5,
-                                            horizontal: true,
-                                            gridColor:"#fff",
-                                            maxValue: 100,
-                                            data: metaObj,
-                                            colors:["#56C400", "#C3C3C3"]
-                                        })
-                                        Count.draw();
-                                        document.querySelector('span.count').textContent = (iAr.length + 1) + ' из ' + elems.length
-
-                                        if(iAr.length == elems.length - 1) {
-                                            setTimeout(() => {
-                                                countList.classList.add('hidden');
-                                                metaCommerce.classList.remove('hidden');
-                                                btn.classList.remove('hidden');
-                                                back.classList.remove('hidden');
-                                                if(elems__arr)
-                                                    elems__arr.classList.remove('hidden')
-                                            }, 1000);
-                                        }
-
-                                        iAr.push(i);
-                                    })
-                                }, 1000 * i);
                             }
                         }
+                        let countList = document.querySelector('.count__list')
+                        let back = document.querySelector('.download__btn#back')
+                        let elems__arr = document.querySelector('#elems__arr')
+                        let metaCommerce = document.querySelector('.metaCommerce')
+                        var iAr = [];
+
+                        var count1 = document.getElementById("count");
+                        count1.width = 500;
+                        count1.height = 30;
+                        var ctxCount1 = count1.getContext("2d");
+
+                        var metaObj1 = {
+                            'obj': {
+                                'calc': 0,
+                                '100calc': 100,
+                            },
+                        };
+
+                        var Count1 = new Barchart(
+                        {
+                            canvas:count1,
+                            seriesName:"",
+                            id:'count',
+                            padding:0,
+                            gridScale:5,
+                            horizontal: true,
+                            gridColor:"#fff",
+                            maxValue: 100,
+                            data: metaObj1,
+                            colors:["#56C400", "#C3C3C3"]
+                        })
+                        Count1.draw();
+                        document.querySelector('span.count').textContent = '0 из ' + elems.length
+
+                        for(let i = 0; i < elems.length; i++) {
+                            if(iAr.length == 0) {
+                                btn.classList.add('hidden');
+                                metaCommerce.classList.add('hidden');
+                                back.classList.add('hidden');
+                                countList.classList.remove('hidden');
+                                if(elems__arr)
+                                    elems__arr.classList.add('hidden')
+                            }
+
+                            var elemUrl = false
+                            var text = ''
+
+                            setTimeout(() => {
+                                if(elems[i].type == 'GOODS') {
+                                    elemUrl = '/bitrix/admin/umax_global_analysis_ajax_detail_goods.php'
+                                }
+                                else if(elems[i].type == 'SERVICE') {
+                                    elemUrl = '/bitrix/admin/umax_global_analysis_ajax_detail_services.php'
+                                }
+                                else if(elems[i].type == 'NEWS') {
+                                    elemUrl = '/bitrix/admin/umax_global_analysis_ajax_detail_news.php'
+                                }
+                                if(iAr.length == 0)
+                                    document.querySelector('span.count').textContent = 0 + ' из ' + elems.length
+                                $.ajax({
+                                    type: "POST",
+                                    url: elemUrl,
+                                    data: elems[i],
+                                    async: false
+                                }).then(res => {
+                                    var count = document.getElementById("count");
+                                    count.width = 500;
+                                    count.height = 30;
+
+                                    var ctxCount = count.getContext("2d");
+
+                                    var metaObj = {
+                                        'obj': {
+                                            'calc': Math.floor(((iAr.length + 1) * 100) / elems.length),
+                                            '100calc': 100 - Math.floor(((iAr.length + 1) * 100) / elems.length),
+                                        },
+                                    };
+
+                                    var Count = new Barchart(
+                                    {
+                                        canvas:count,
+                                        seriesName:"",
+                                        id:'count',
+                                        padding:0,
+                                        gridScale:5,
+                                        horizontal: true,
+                                        gridColor:"#fff",
+                                        maxValue: 100,
+                                        data: metaObj,
+                                        colors:["#56C400", "#C3C3C3"]
+                                    })
+                                    Count.draw();
+                                    document.querySelector('span.count').textContent = (iAr.length + 1) + ' из ' + elems.length
+
+                                    if(iAr.length == elems.length - 1) {
+                                        setTimeout(() => {
+                                            countList.classList.add('hidden');
+                                            metaCommerce.classList.remove('hidden');
+                                            btn.classList.remove('hidden');
+                                            back.classList.remove('hidden');
+                                            if(elems__arr)
+                                                elems__arr.classList.remove('hidden')
+                                        }, 1000);
+                                    }
+
+                                    iAr.push(i);
+                                })
+                            }, 1000 * i);
+                        }
+                    }
+                    if(pages) {
+                        if(pages.length > 0) {
+                            if(!seo) {
+                                $.ajax({
+                                    type: "POST",
+                                    url: '/bitrix/admin/umax_global_analysis_empty.php',
+                                    async: false,
+                                    data: {
+                                        <?if($_GET['detail']):?>
+                                            pages: pages
+                                        <?endif?>
+                                    }
+                                }).done(empty => {
+                                    let countList = document.querySelector('.count__list')
+                                    let detail = document.querySelector('.download__btn#detail')
+                                    let seo = document.querySelector('.download__btn#seo')
+                                    let pages__arr = document.querySelector('#pages__arr')
+                                    let metaCommerce = document.querySelector('.metaCommerce')
+                                    var iAr = [];
+
+                                    var count1 = document.getElementById("count");
+                                    count1.width = 500;
+                                    count1.height = 30;
+                                    var ctxCount1 = count1.getContext("2d");
+
+                                    var metaObj1 = {
+                                        'obj': {
+                                            'calc': 0,
+                                            '100calc': 100,
+                                        },
+                                    };
+
+                                    var Count1 = new Barchart(
+                                    {
+                                        canvas:count1,
+                                        seriesName:"",
+                                        id:'count',
+                                        padding:0,
+                                        gridScale:5,
+                                        horizontal: true,
+                                        gridColor:"#fff",
+                                        maxValue: 100,
+                                        data: metaObj1,
+                                        colors:["#56C400", "#C3C3C3"]
+                                    })
+                                    Count1.draw();
+                                    document.querySelector('span.count').textContent = '0 из ' + pages.length
+
+                                    for(let i = 0; i < pages.length; i++) {
+                                        if(iAr.length == 0) {
+                                            btn?.classList.add('hidden');
+                                            metaCommerce?.classList.add('hidden');
+                                            detail?.classList.add('hidden');
+                                            seo?.classList.add('hidden');
+                                            countList?.classList.remove('hidden');
+                                            if(pages__arr)
+                                                pages__arr?.classList.add('hidden')
+                                        }
+                                        
+                                        var ajaxTime= new Date().getTime();
+                                        setTimeout(() => {
+                                            $.ajax({
+                                                type: "POST",
+                                                url: '/bitrix/admin/umax_global_analysis_ajax.php',
+                                                data: {
+                                                    page: pages[i],
+                                                    id: i,
+                                                    length: pages.length
+                                                }
+                                            }).done(res => {
+                                                var count = document.getElementById("count");
+                                                count.width = 500;
+                                                count.height = 30;
+
+                                                var ctxCount = count.getContext("2d");
+
+                                                var metaObj = {
+                                                    'obj': {
+                                                        'calc': Math.floor(((iAr.length + 1) * 100) / pages.length),
+                                                        '100calc': 100 - Math.floor(((iAr.length + 1) * 100) / pages.length),
+                                                    },
+                                                };
+
+                                                var Count = new Barchart(
+                                                {
+                                                    canvas:count,
+                                                    seriesName:"",
+                                                    id:'count',
+                                                    padding:0,
+                                                    gridScale:5,
+                                                    horizontal: true,
+                                                    gridColor:"#fff",
+                                                    maxValue: 100,
+                                                    data: metaObj,
+                                                    colors:["#56C400", "#C3C3C3"]
+                                                })
+                                                Count.draw();
+                                                document.querySelector('span.count').textContent = (iAr.length + 1) + ' из ' + pages.length
+
+                                                if(iAr.length == pages.length - 1) {
+                                                    setTimeout(() => {
+                                                        countList?.classList.add('hidden');
+                                                        btn?.classList.remove('hidden');
+                                                        metaCommerce?.classList.remove('hidden');
+                                                        detail?.classList.remove('hidden');
+                                                        seo?.classList.remove('hidden');
+                                                        if(pages__arr)
+                                                            pages__arr?.classList.remove('hidden')
+                                                    }, 1000);
+                                                }
+
+                                                iAr.push(i);
+                                            })
+                                        }, 10000 * i);
+                                    }
+                                })      
+                            }
+                        } else {
+                            alert('Файл sitemap.xml не найден')
+                        }
+                    } else {
+                        alert('Файл sitemap.xml не найден')
                     }
                 })
             })

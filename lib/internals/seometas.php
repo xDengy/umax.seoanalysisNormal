@@ -131,7 +131,8 @@ class UmaxMetasTable extends \UmaxAnalysisDataManager
 
         $metaRes = self::updateMultiple($newMeta);
         
-        $res = UmaxSeoAnalysisTable::update(1, $out);
+        $curRes = UmaxSeoAnalysisTable::getList()->Fetch()['ID'];
+        $res = UmaxSeoAnalysisTable::update($curRes, $out);
         return [$res->isSuccess(), $metaRes];
     }
 }

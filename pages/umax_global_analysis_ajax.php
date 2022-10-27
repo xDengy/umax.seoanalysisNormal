@@ -1,21 +1,10 @@
 <?
-    use Umax\Lib\Internals\UmaxSeoAnalysisTable;
-    use Umax\Lib\Internals\UmaxSeoSettingsTable;
-    use Umax\Lib\Internals\UmaxCommerceTable;
-    use Umax\Lib\Internals\UmaxMetasTable;
-    use Umax\Lib\Internals\UmaxImagesTable;
-    use Umax\Lib\Internals\UmaxIndexesTable;
-    use Umax\Lib\Internals\UmaxSeoOnPageTable;
-    use Umax\Lib\Internals\UmaxSummaryTable;
-    use Umax\Lib\Internals\UmaxSeoPagesTable;
-    use Bitrix\Main\Loader;
-
     require_once($_SERVER['DOCUMENT_ROOT'].'/bitrix/modules/main/include/prolog_admin.php');
     
     global $APPLICATION;
 ?>
 <?
-    if (Loader::includeModule('umax.seoanalysis') && !\UmaxAnalysisDataManager::isDemoEnd()) {
+    if (\Bitrix\Main\Loader::includeModule('umax.seoanalysis') && !\UmaxAnalysisDataManager::isDemoEnd()) {
         if (!function_exists("get_http_code")) {
             function get_http_code($url) {
                 $handle = curl_init($url);
@@ -34,10 +23,10 @@
 
         $page = $_REQUEST['page'];
 
-        $summaryAr = UmaxSummaryTable::getMap();
-        $seoOnPageAr = UmaxSeoOnPageTable::getMap();
-        $indexesAr = UmaxIndexesTable::getMap();
-        $metasAr = UmaxMetasTable::getMap();
+        $summaryAr = \Umax\Lib\Internals\UmaxSummaryTable::getMap();
+        $seoOnPageAr = \Umax\Lib\Internals\UmaxSeoOnPageTable::getMap();
+        $indexesAr = \Umax\Lib\Internals\UmaxIndexesTable::getMap();
+        $metasAr = \Umax\Lib\Internals\UmaxMetasTable::getMap();
         $imagesAr = [];
 
         foreach ($summaryAr as $key => $value) {
@@ -65,54 +54,21 @@
         $metasAr['page_url'] = $page;
         $pageType = '';
 
-        $settingsTable = UmaxSeoSettingsTable::getList()->Fetch();
-        $goodsId = $settingsTable['GOODS'];
-        $serviceId = $settingsTable['SERVICE'];
-        $newsId = $settingsTable['NEWS'];
+        $settingsTable = \Umax\Lib\Internals\UmaxSeoSettingsTable::getList()->FetchAll();
         
         $curStep = 0;
         if(isset($_SESSION['UMAX_STEP'])) {
             $curStep = $_SESSION['UMAX_STEP'];
         }
+        
+        $pageNew = str_replace('#SITE_DIR#', '', $page);
 
-        $blockCatalog = CIBlock::GetById($goodsId)->Fetch();
-        $goods = CIBlockElement::GetList(
-            array("SORT" => "ASC"),
-            array(
-                'IBLOCK_ID' => $goodsId,
-                "ACTIVE"    => "Y"
-            ),
-            []
-        );
+        foreach($settingsTable as $value) {
+            $block = \CIBlock::GetById($value['IBLOCK_ID'])->Fetch();
 
-        $pageNew = explode('#SITE_DIR#', $page)[1];
-
-        if(str_contains($pageNew, $blockCatalog['LIST_PAGE_URL']))
-            $pageType = 'Товар';
-
-        $blockService = CIBlock::GetById($serviceId)->Fetch();
-        $service = CIBlockElement::GetList(
-            array("SORT" => "ASC"),
-            array(
-                'IBLOCK_ID' => $serviceId,
-                "ACTIVE"    => "Y"
-            ),
-            []
-        );
-        if(str_contains($pageNew, $blockService['LIST_PAGE_URL']))
-            $pageType = 'Услуга';
-
-        $blockNews = CIBlock::GetById($newsId)->Fetch();
-        $news = CIBlockElement::GetList(
-            array("SORT" => "ASC"),
-            array(
-                'IBLOCK_ID' => $newsId,
-                "ACTIVE"    => "Y"
-            ),
-            []
-        );
-        if(str_contains($pageNew, $blockNews['LIST_PAGE_URL']))
-            $pageType = 'Статья';
+            if(str_contains($pageNew, $block['LIST_PAGE_URL']))
+                $pageType = $value['TYPE'];
+        }
 
         $summaryAr['type'] = $pageType;
         $seoOnPageAr['type'] = $pageType;
@@ -132,7 +88,7 @@
         $checkImg = [];
         $fullAr = [];
 
-        $dom = new DOMDocument;
+        $dom = new \DOMDocument;
         $getContents = file_get_contents($page . '/');
         $dom->loadHTML($getContents);
 
@@ -313,22 +269,22 @@
         $fullAr['PAGES_INDEX'] = $indexPages;
         $fullAr['PAGES_NOINDEX'] = $noIndexPages;
 
-        $fullAr['SEO_ON_PAGE_GOODS'] = $goods;
-        $fullAr['SEO_ON_PAGE_SERVICE'] = $service;
-        $fullAr['SEO_ON_PAGE_NEWS'] = $news;
+        $fullAr['SEO_ON_PAGE_GOODS'] = 0;
+        $fullAr['SEO_ON_PAGE_SERVICE'] = 0;
+        $fullAr['SEO_ON_PAGE_NEWS'] = 0;
 
-        $res = UmaxSeoAnalysisTable::plus($fullAr);
-        $res = UmaxSeoPagesTable::add($fullAr);
-        $res = UmaxSummaryTable::add($summaryAr);
+        $res = \Umax\Lib\Internals\UmaxSeoAnalysisTable::plus($fullAr);
+        $res = \Umax\Lib\Internals\UmaxSeoPagesTable::add($fullAr);
+        $res = \Umax\Lib\Internals\UmaxSummaryTable::add($summaryAr);
         if($seoOnPageAr['type'] !== '')
-            $res = UmaxSeoOnPageTable::add($seoOnPageAr);
-        $res = UmaxIndexesTable::add($indexesAr);
-        $res = UmaxMetasTable::add($metasAr);
-        UmaxImagesTable::addMultiple($imagesAr);
+            $res = \Umax\Lib\Internals\UmaxSeoOnPageTable::add($seoOnPageAr);
+        $res = \Umax\Lib\Internals\UmaxIndexesTable::add($indexesAr);
+        $res = \Umax\Lib\Internals\UmaxMetasTable::add($metasAr);
+        \Umax\Lib\Internals\UmaxImagesTable::addMultiple($imagesAr);
 
         if($_POST['length'] - 1 == $_POST['id']) {
-            UmaxMetasTable::ude();
-            UmaxCommerceTable::getContent();
+            \Umax\Lib\Internals\UmaxMetasTable::ude();
+            \Umax\Lib\Internals\UmaxCommerceTable::getContent();
         }
     }
 ?>

@@ -102,14 +102,17 @@ class UmaxAnalysisDataManager extends Bitrix\Main\Entity\DataManager
     public static function minus($page)
     {
         $curPage = \Umax\Lib\Internals\UmaxSeoPagesTable::getList(['filter' => ['page_url' => $page]])->Fetch();
-        $parent = self::getList()->Fetch();
-        unset($curPage['ID']);
-        $curPage['SUMMARY_INDEX'] = 1;
-        foreach ($curPage as $key => $value) {
-            $parent[$key] = intval($parent[$key]) - intval($value);
+        if($curPage) {
+            $parent = self::getList()->Fetch();
+            unset($curPage['ID']);
+            $curPage['SUMMARY_INDEX'] = 1;
+            foreach ($curPage as $key => $value) {
+                $parent[$key] = intval($parent[$key]) - intval($value);
+            }
+            \Umax\Lib\Internals\UmaxSeoPagesTable::deleteByPageUrl($page);
+            return parent::update($parent['ID'], $parent);
         }
-        \Umax\Lib\Internals\UmaxSeoPagesTable::deleteByPageUrl($page);
-        return parent::update($parent['ID'], $parent);
+        return true;
     }
 
     public static function deleteByPageUrl($page)

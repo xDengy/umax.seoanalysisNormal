@@ -1,16 +1,10 @@
 <?
-    use Umax\Lib\Internals\UmaxMetasTable;
-    use Bitrix\Main\Loader;
-    use Umax\Lib\Internals\UmaxSeoErrorsTable;
-    use Umax\Lib\Internals\UmaxSeoOnPageElementTable;
-    use Umax\Lib\Internals\UmaxSeoOnPageElementErrorsTable;
-
     require_once($_SERVER['DOCUMENT_ROOT'].'/bitrix/modules/main/include/prolog_admin.php');
     
     global $APPLICATION;
 ?>
 <?
-    if (Loader::includeModule('umax.seoanalysis') && !\UmaxAnalysisDataManager::isDemoEnd()) {
+    if (\Bitrix\Main\Loader::includeModule('umax.seoanalysis') && !\UmaxAnalysisDataManager::isDemoEnd()) {
         function DOMinnerHTML(DOMNode $element) 
         { 
             $innerHTML = ""; 
@@ -48,7 +42,7 @@
         $fullAr['IBLOCK_TYPE'] = $type;
         $fullAr['ELEMENT_ID'] = $elemId;
 
-        $metasTable = UmaxMetasTable::getList([
+        $metasTable = \Umax\Lib\Internals\UmaxMetasTable::getList([
             'filter' => [
                 'page_url' => $page
             ]
@@ -62,7 +56,7 @@
         if($_SERVER['HTTP_X_FORWARDED_PROTO'] !== 'https')
             $errors['SSL'] = 'SSL';
 
-        $dom = new DOMDocument;
+        $dom = new \DOMDocument;
         $getContents = file_get_contents($page);
         $dom->loadHTML($getContents);
 
@@ -249,7 +243,7 @@
         if(!str_contains($doms, 'руб') && !str_contains($doms, '₽'))
             $errors['PRICE'] = 'PRICE';
 
-        UmaxSeoOnPageElementErrorsTable::clear([
+        \Umax\Lib\Internals\UmaxSeoOnPageElementErrorsTable::clear([
             'filter' => [
                 'ELEMENT_ID' => $elemId
             ]
@@ -261,7 +255,7 @@
         $blue = 0;
 
         foreach ($errors as $key => $error) {
-            $curError = UmaxSeoErrorsTable::getList([
+            $curError = \Umax\Lib\Internals\UmaxSeoErrorsTable::getList([
                 'filter' => [
                     'IBLOCK_TYPE' => $fullAr['IBLOCK_TYPE'],
                     'KEY' => $error
@@ -278,10 +272,10 @@
             else if($curError['VALUE'] == 1)
                 $blue += 1;
                     
-            UmaxSeoOnPageElementErrorsTable::add($fullAr);
+            \Umax\Lib\Internals\UmaxSeoOnPageElementErrorsTable::add($fullAr);
         }
 
-        $green = UmaxSeoErrorsTable::getList([
+        $green = \Umax\Lib\Internals\UmaxSeoErrorsTable::getList([
             'filter' => [
                 'IBLOCK_TYPE' => $fullAr['IBLOCK_TYPE'],
             ]
@@ -294,7 +288,7 @@
         }
         $green = count($green);
 
-        $allErrors = UmaxSeoErrorsTable::getList([
+        $allErrors = \Umax\Lib\Internals\UmaxSeoErrorsTable::getList([
             'filter' => [
                 'IBLOCK_TYPE' => $type,
             ]
@@ -315,10 +309,10 @@
             'YELLOW' => $yellow,
             'GREEN' => $green,
             'BLUE' => $blue,
-            'IBLOCK_ID' => CIBlockElement::GetById($elemId)->Fetch()['IBLOCK_ID']
+            'IBLOCK_ID' => \CIBlockElement::GetById($elemId)->Fetch()['IBLOCK_ID']
         ];
 
-        $elemRes = UmaxSeoOnPageElementTable::GetList([
+        $elemRes = \Umax\Lib\Internals\UmaxSeoOnPageElementTable::GetList([
             'filter' => [
                 'IBLOCK_TYPE' => $fullAr['IBLOCK_TYPE'],
                 'ELEMENT_ID' => $elemId,
@@ -329,12 +323,12 @@
         $elementAr['DATE_CHANGE'] = $d->format("Y-m-d H:m:s");
 
         if($elemRes)
-            UmaxSeoOnPageElementTable::update($elemRes['ID'], $elementAr);
+            \Umax\Lib\Internals\UmaxSeoOnPageElementTable::update($elemRes['ID'], $elementAr);
         else
-            UmaxSeoOnPageElementTable::add($elementAr);
+            \Umax\Lib\Internals\UmaxSeoOnPageElementTable::add($elementAr);
 
-        $element = new CIBlockElement;
-        $arElement = CIBlockElement::GetByID($elemId)->Fetch();
+        $element = new \CIBlockElement;
+        $arElement = \CIBlockElement::GetByID($elemId)->Fetch();
         $element->Update($arElement["ID"], array());
     }
 ?>

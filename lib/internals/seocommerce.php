@@ -2,7 +2,6 @@
 namespace Umax\Lib\Internals;
 
 use Bitrix\Main\Localization\Loc;
-use Umax\Lib\Internals\UmaxSeoAnalysisTable;
 Loc::loadMessages(__FILE__);
 
 class UmaxCommerceTable extends \UmaxAnalysisDataManager
@@ -112,11 +111,11 @@ class UmaxCommerceTable extends \UmaxAnalysisDataManager
         ];
 
         $commerce = 0;
-        $a = $content->getElementsByTagName('a');
+        $a = $content->evaluate('a');
         $ar = [];
         $reasonsAr = [];
         foreach($a as $aValue) {
-            if(UmaxCommerceTable::str_contains(trim(mb_strtolower($aValue->textContent)), '+79') || UmaxCommerceTable::str_contains(trim(mb_strtolower($aValue->textContent)), '88')) {
+            if(\Umax\Lib\Internals\UmaxCommerceTable::str_contains(trim(mb_strtolower($aValue->textContent)), '+79') || \Umax\Lib\Internals\UmaxCommerceTable::str_contains(trim(mb_strtolower($aValue->textContent)), '88')) {
                 $commerce++;
                 $reasonsAr[$type . ' наличие номера телефона'] = 'Да';
                 if('tel:' . trim(mb_strtolower($aValue->textContent)) == $aValue->getAttribute('href')) {
@@ -127,7 +126,7 @@ class UmaxCommerceTable extends \UmaxAnalysisDataManager
             }
             if($phoneCheck)
                 continue;
-            if(UmaxCommerceTable::str_contains(trim(mb_strtolower($aValue->textContent)), '@')) {
+            if(\Umax\Lib\Internals\UmaxCommerceTable::str_contains(trim(mb_strtolower($aValue->textContent)), '@')) {
                 $commerce++;
                 $reasonsAr[$type . ' наличие адреса почты'] = 'Да';
                 if('mailto:' . trim(mb_strtolower($aValue->textContent)) == $aValue->getAttribute('href')) {
@@ -139,7 +138,7 @@ class UmaxCommerceTable extends \UmaxAnalysisDataManager
             if($mailCheck)
                 continue;
             if($type !== 'страница контактов') {
-                if(UmaxCommerceTable::str_contains(trim(mb_strtolower($aValue->textContent)), 'контакт')) {
+                if(\Umax\Lib\Internals\UmaxCommerceTable::str_contains(trim(mb_strtolower($aValue->textContent)), 'контакт')) {
                     $commerce++;
                     $reasonsAr[$type . ' наличие страницы контакты'] = 'Да';
                     $contacts = $aValue->getAttribute('href');
@@ -194,7 +193,7 @@ class UmaxCommerceTable extends \UmaxAnalysisDataManager
             if($politicCheck)
                 continue;
             foreach ($socials as $social) {
-                if(UmaxCommerceTable::str_contains($aValue->getAttribute('href'), $social)) {
+                if(\Umax\Lib\Internals\UmaxCommerceTable::str_contains($aValue->getAttribute('href'), $social)) {
                     $commerce++;
                     $reasonsAr[$type . ' наличие социальных сетей'] = 'Да';
                     $socialCheck = 1;
@@ -206,7 +205,7 @@ class UmaxCommerceTable extends \UmaxAnalysisDataManager
             if($socialCheck)
                 continue;
             foreach ($messengers as $messenger) {
-                if(UmaxCommerceTable::str_contains($aValue->getAttribute('href'), $messenger)) {
+                if(\Umax\Lib\Internals\UmaxCommerceTable::str_contains($aValue->getAttribute('href'), $messenger)) {
                     $commerce++;
                     $reasonsAr[$type . ' наличие мессенджеров'] = 'Да';
                     $messengerCheck = 1;
@@ -219,7 +218,7 @@ class UmaxCommerceTable extends \UmaxAnalysisDataManager
                 continue;
         }
         foreach($days as $day) {
-            if(UmaxCommerceTable::str_contains(mb_strtolower($content->innerHTML), $day)) {
+            if(\Umax\Lib\Internals\UmaxCommerceTable::str_contains(mb_strtolower($content->innerHTML), $day)) {
                 $commerce++;
                 $reasonsAr[$type . ' наличие графика работы'] = 'Да';
                 $dayCheck = 1;
@@ -230,7 +229,7 @@ class UmaxCommerceTable extends \UmaxAnalysisDataManager
         }
         if($type !== 'страница контактов') {
             foreach($calls as $call) {
-                if(UmaxCommerceTable::str_contains(mb_strtolower($content->innerHTML), $call)) {
+                if(\Umax\Lib\Internals\UmaxCommerceTable::str_contains(mb_strtolower($content->innerHTML), $call)) {
                     $commerce++;
                     $reasonsAr[$type . ' наличие форм связи'] = 'Да';
                     $callCheck = 1;
@@ -253,7 +252,7 @@ class UmaxCommerceTable extends \UmaxAnalysisDataManager
             }
         }
         if($type == 'страница контактов') {
-            $h1 = $content->getElementsByTagName('h1')[0];
+            $h1 = $content->evaluate('h1')[0];
             if(strlen($h1->textContent) > 0) {
                 $reasonsAr[$type . ' наличие h1'] = 'Да';
                 $commerce++;
@@ -270,6 +269,7 @@ class UmaxCommerceTable extends \UmaxAnalysisDataManager
         $dom = new \DOMDocument;
         $getContents = file_get_contents($page . '/');
         $dom->loadHTML($getContents);
+        $dom = new \DOMXpath($dom);
 
         $contacts = false;
         $about = false;
@@ -327,17 +327,19 @@ class UmaxCommerceTable extends \UmaxAnalysisDataManager
             'страница о нас/о компании наличие сертификатов/наград/дипломов' => 'Нет',
         ];
         
-        $header = $dom->getElementsByTagName('header')[0];
-        if(isset($header)) {
-            $headerContent = UmaxCommerceTable::getTemplateContent($header, 'хидер', $contacts, $about);
+        $header = $dom->evaluate('header');
+        if(isset($header) && array_key_exists(0, $header)) {
+            $header = $header[0];
+            $headerContent = \Umax\Lib\Internals\UmaxCommerceTable::getTemplateContent($header, 'хидер', $contacts, $about);
             $commerce += $headerContent['commerce'];
             $contacts = $headerContent['contacts'];
             $about = $headerContent['about'];
             $reasonsAr = array_merge($reasonsAr, $headerContent['reasonsAr']);
         } else {
-            $header = $dom->getElementsByClassName('header')[0];
-            if(isset($header)) {
-                $headerContent = UmaxCommerceTable::getTemplateContent($header, 'хидер', $contacts, $about);
+            $header = $dom->evaluate('.header');
+            if(isset($header) && array_key_exists(0, $header)) {
+                $header = $header[0];
+                $headerContent = \Umax\Lib\Internals\UmaxCommerceTable::getTemplateContent($header, 'хидер', $contacts, $about);
                 $commerce += $headerContent['commerce'];
                 $contacts = $headerContent['contacts'];
                 $about = $headerContent['about'];
@@ -345,17 +347,19 @@ class UmaxCommerceTable extends \UmaxAnalysisDataManager
             }
         }
         
-        $footer = $dom->getElementsByTagName('footer')[0];
-        if(isset($footer)) {
-            $footerContent = UmaxCommerceTable::getTemplateContent($footer, 'футер', $contacts, $about);
+        $footer = $dom->evaluate('footer');
+        if(isset($footer) && array_key_exists(0, $footer)) {
+            $footer = $footer[0];
+            $footerContent = \Umax\Lib\Internals\UmaxCommerceTable::getTemplateContent($footer, 'футер', $contacts, $about);
             $commerce += $footerContent['commerce'];
             $contacts = $footerContent['contacts'];
             $about = $footerContent['about'];
             $reasonsAr = array_merge($reasonsAr, $footerContent['reasonsAr']);
         } else {
-            $footer = $dom->getElementsByClassName('footer')[0];
-            if(isset($footer)) {
-                $footerContent = UmaxCommerceTable::getTemplateContent($footer, 'футер', $contacts, $about);
+            $footer = $dom->evaluate('.footer');
+            if(isset($footer) && array_key_exists(0, $footer)) {
+                $footer = $footer[0];
+                $footerContent = \Umax\Lib\Internals\UmaxCommerceTable::getTemplateContent($footer, 'футер', $contacts, $about);
                 $commerce += $footerContent['commerce'];
                 $contacts = $footerContent['contacts'];
                 $about = $footerContent['about'];
@@ -367,40 +371,41 @@ class UmaxCommerceTable extends \UmaxAnalysisDataManager
             $aboutDom = new \DOMDocument;
             $aboutContents = file_get_contents($page . $about);
             $aboutDom->loadHTML($aboutContents);
+            $aboutDom = new \DOMXpath($aboutDom);
 
             $anyElems = parent::getMainZone($aboutDom);
             $aboutImages = [];
             foreach ($anyElems as $key => $value) {
-                $aboutImages = array_merge($aboutImages, $value->getElementsByTagName('img'));
-                $video = $value->getElementsByTagName('video')[0];
+                $aboutImages = array_merge($aboutImages, $value->evaluate('img'));
+                $video = $value->evaluate('video')[0];
                 if($video) {
                     $reasonsAr['страница о нас/о компании наличие видео'] = 'Да';
                     $commerce++;
                 } else {
-                    $videoA = $value->getElementsByTagName('a');
+                    $videoA = $value->evaluate('a');
                     foreach ($videoA as $a) {
-                        if(UmaxCommerceTable::str_contains($a->getAttribute('href'), 'youtube')) {
+                        if(\Umax\Lib\Internals\UmaxCommerceTable::str_contains($a->getAttribute('href'), 'youtube')) {
                             $reasonsAr['страница о нас/о компании наличие видео'] = 'Да';
                             $commerce++;
                             break;
                         }
                     }
                 }
-                if(UmaxCommerceTable::str_contains($value->innerHTML, 'отзывы') || 
-                    UmaxCommerceTable::str_contains($value->innerHTML, 'отзывы клиентов') || 
-                    UmaxCommerceTable::str_contains($value->innerHTML, 'от клиентов') || 
-                    UmaxCommerceTable::str_contains($value->innerHTML, 'о нас говорят')) {
+                if(\Umax\Lib\Internals\UmaxCommerceTable::str_contains($value->innerHTML, 'отзывы') || 
+                    \Umax\Lib\Internals\UmaxCommerceTable::str_contains($value->innerHTML, 'отзывы клиентов') || 
+                    \Umax\Lib\Internals\UmaxCommerceTable::str_contains($value->innerHTML, 'от клиентов') || 
+                    \Umax\Lib\Internals\UmaxCommerceTable::str_contains($value->innerHTML, 'о нас говорят')) {
                         $reasonsAr['страница о нас/о компании наличие отзывов'] = 'Да';
                         $commerce++;
                 }
-                if(UmaxCommerceTable::str_contains($value->innerHTML, 'сертификаты') || 
-                    UmaxCommerceTable::str_contains($value->innerHTML, 'награды') || 
-                    UmaxCommerceTable::str_contains($value->innerHTML, 'дипломы')) {
+                if(\Umax\Lib\Internals\UmaxCommerceTable::str_contains($value->innerHTML, 'сертификаты') || 
+                    \Umax\Lib\Internals\UmaxCommerceTable::str_contains($value->innerHTML, 'награды') || 
+                    \Umax\Lib\Internals\UmaxCommerceTable::str_contains($value->innerHTML, 'дипломы')) {
                         $reasonsAr['страница о нас/о компании наличие сертификатов/наград/дипломов'] = 'Да';
                         $commerce++;
                 }
             }
-            $h1 = $aboutDom->getElementsByTagName('h1')[0];
+            $h1 = $aboutDom->evaluate('h1')[0];
             if(strlen($h1->textContent) > 0) {
                 $reasonsAr['страница о нас/о компании наличие h1'] = 'Да';
                 $commerce++;
@@ -415,56 +420,58 @@ class UmaxCommerceTable extends \UmaxAnalysisDataManager
             $contactsDom = new \DOMDocument;
             $contactsContents = file_get_contents($page . $contacts);
             $contactsDom->loadHTML($contactsContents);
+            $contactsDom = new \DOMXpath($contactsDom);
+
             $anyElems = parent::getMainZone($contactsDom);
 
             $contactsImages = [];
             foreach ($anyElems as $key => $value) {
-                $contactsTemplateContent = UmaxCommerceTable::getTemplateContent($value, 'страница контактов');
+                $contactsTemplateContent = \Umax\Lib\Internals\UmaxCommerceTable::getTemplateContent($value, 'страница контактов');
                 $commerce += $contactsTemplateContent['commerce'];
                 $reasonsAr = array_merge($reasonsAr, $contactsTemplateContent['reasonsAr']);
 
-                $images = $value->getElementsByTagName('img');
+                $images = $value->evaluate('img');
                 foreach ($images as $img) {
                     $src = $img->getAttribute('src');
                     $type = explode('.', $src)[1];
                     if(mb_strtolower($type) == 'jpg' || mb_strtolower($type) == 'png' || mb_strtolower($type) == 'jpeg')
                         $contactsImages[] = $img;
                 }
-                $map = $value->getElementsByTagName('ymaps')[0];
+                $map = $value->evaluate('ymaps')[0];
                 if($map) {
                     $reasonsAr['страница контактов наличие карты'] = 'Да';
                     $commerce++;
                 } else {
-                    $mapA = $value->getElementsByTagName('a');
+                    $mapA = $value->evaluate('a');
                     foreach ($mapA as $a) {
-                        if(UmaxCommerceTable::str_contains($a->getAttribute('href'), 'google.com/maps')) {
+                        if(\Umax\Lib\Internals\UmaxCommerceTable::str_contains($a->getAttribute('href'), 'google.com/maps')) {
                             $commerce++;
                             $reasonsAr['страница контактов наличие карты'] = 'Да';
                             break;
                         }
                     }
                 }
-                $form = $value->getElementsByTagName('form')[0];
+                $form = $value->evaluate('form')[0];
                 if($form) {
                     $reasonsAr['страница контактов наличие формы'] = 'Да';
                     $commerce++;
                 }
-                if(UmaxCommerceTable::str_contains($value->innerHTML, 'ИНН') || 
-                    UmaxCommerceTable::str_contains($value->innerHTML, 'ОГРН') || 
-                    UmaxCommerceTable::str_contains($value->innerHTML, 'БИК') || 
-                    UmaxCommerceTable::str_contains($value->innerHTML, 'Юридический адрес')) {
+                if(\Umax\Lib\Internals\UmaxCommerceTable::str_contains($value->innerHTML, 'ИНН') || 
+                    \Umax\Lib\Internals\UmaxCommerceTable::str_contains($value->innerHTML, 'ОГРН') || 
+                    \Umax\Lib\Internals\UmaxCommerceTable::str_contains($value->innerHTML, 'БИК') || 
+                    \Umax\Lib\Internals\UmaxCommerceTable::str_contains($value->innerHTML, 'Юридический адрес')) {
                         $reasonsAr['страница контактов наличие реквизитов'] = 'Да';
                         $commerce++;
                 }
-                if(UmaxCommerceTable::str_contains($value->innerHTML, 'добраться') || 
-                    UmaxCommerceTable::str_contains($value->innerHTML, 'доехать') || 
-                    UmaxCommerceTable::str_contains($value->innerHTML, 'автобус') || 
-                    UmaxCommerceTable::str_contains($value->innerHTML, 'маршрут') || 
-                    UmaxCommerceTable::str_contains($value->innerHTML, 'автомобиль') || 
-                    UmaxCommerceTable::str_contains($value->innerHTML, 'авто') || 
-                    UmaxCommerceTable::str_contains($value->innerHTML, 'машина') || 
-                    UmaxCommerceTable::str_contains($value->innerHTML, 'троллейбус') || 
-                    UmaxCommerceTable::str_contains($value->innerHTML, 'трамвай')) {
+                if(\Umax\Lib\Internals\UmaxCommerceTable::str_contains($value->innerHTML, 'добраться') || 
+                    \Umax\Lib\Internals\UmaxCommerceTable::str_contains($value->innerHTML, 'доехать') || 
+                    \Umax\Lib\Internals\UmaxCommerceTable::str_contains($value->innerHTML, 'автобус') || 
+                    \Umax\Lib\Internals\UmaxCommerceTable::str_contains($value->innerHTML, 'маршрут') || 
+                    \Umax\Lib\Internals\UmaxCommerceTable::str_contains($value->innerHTML, 'автомобиль') || 
+                    \Umax\Lib\Internals\UmaxCommerceTable::str_contains($value->innerHTML, 'авто') || 
+                    \Umax\Lib\Internals\UmaxCommerceTable::str_contains($value->innerHTML, 'машина') || 
+                    \Umax\Lib\Internals\UmaxCommerceTable::str_contains($value->innerHTML, 'троллейбус') || 
+                    \Umax\Lib\Internals\UmaxCommerceTable::str_contains($value->innerHTML, 'трамвай')) {
                         $reasonsAr['страница контактов наличие фраз транспорта'] = 'Да';
                         $commerce++;
                 }
@@ -485,17 +492,22 @@ class UmaxCommerceTable extends \UmaxAnalysisDataManager
         }
 
         foreach($updateReasons as $reason) {
-            $id = UmaxCommerceTable::getList(['filter' => ['factor' => $reason['factor']]])->Fetch()['ID'];
+            $id = \Umax\Lib\Internals\UmaxCommerceTable::getList(['filter' => ['factor' => $reason['factor']]])->Fetch()['ID'];
             if($id)
-                UmaxCommerceTable::update($id, $reason);
+                \Umax\Lib\Internals\UmaxCommerceTable::update($id, $reason);
             else
-                UmaxCommerceTable::add($reason);
+                \Umax\Lib\Internals\UmaxCommerceTable::add($reason);
         }
         
-        UmaxSeoAnalysisTable::update(1, [
-            'SUMMARY_COMMERCE' => $commerce,
-            'COMMERCE' => $commerce,
-        ]);
+        $res = \Umax\Lib\Internals\UmaxSeoAnalysisTable::getList()->Fetch()['ID'];
+
+        if($res) {
+            \Umax\Lib\Internals\UmaxSeoAnalysisTable::update($res, [
+                'SUMMARY_COMMERCE' => $commerce,
+                'COMMERCE' => $commerce,
+            ]);
+        }
         return $commerce;
     }
 }
+
