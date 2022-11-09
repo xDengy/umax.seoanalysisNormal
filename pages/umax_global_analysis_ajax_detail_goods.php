@@ -5,17 +5,9 @@
 ?>
 <?
     if (\Bitrix\Main\Loader::includeModule('umax.seoanalysis') && !\UmaxAnalysisDataManager::isDemoEnd()) {
-        function DOMinnerHTML(DOMNode $element) 
+        function DOMinnerHTML($element) 
         { 
-            $innerHTML = ""; 
-            $children  = $element->childNodes;
-
-            foreach ($children as $child) 
-            { 
-                $innerHTML .= $element->ownerDocument->saveHTML($child);
-            }
-            $innerHTML = mb_strtolower($innerHTML);
-            return $innerHTML; 
+            return mb_strtolower($element->innerHTML);
         } 
 
         if (!function_exists("get_http_code")) {
@@ -37,7 +29,8 @@
         $page = $_REQUEST['page'];
         $type = $_REQUEST['type'];
         $elemId = $_REQUEST['id'];
-
+        
+        $fullAr['page_url'] = $page;
         $fullAr['IBLOCK_TYPE'] = $type;
         $fullAr['ELEMENT_ID'] = $elemId;
 
@@ -161,8 +154,6 @@
         if(in_array('Disallow: '. $page , $robotsTxtExploded))
             $errors['ROBOTS.TXT'] = 'ROBOTS.TXT';
 
-        $newDom = \UmaxAnalysisDataManager::getMainZone($dom);
-        $doms = '';
         $ul = [];
         $ol = [];
         $table = [];
@@ -224,7 +215,6 @@
 
         if(!$formCheck)
             $errors['FORM'] = 'FORM';
-
 
         if(!str_contains(DOMinnerHTML($doms), 'заказать') && !str_contains(DOMinnerHTML($doms), 'в корзину') && !str_contains(DOMinnerHTML($doms), 'купить'))
             $errors['ORDER'] = 'ORDER';

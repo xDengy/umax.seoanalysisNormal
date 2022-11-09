@@ -540,7 +540,6 @@
                                     type: "POST",
                                     url: elemUrl,
                                     data: elems[i],
-                                    async: false
                                 }).then(res => {
                                     var count = document.getElementById("count");
                                     count.width = 500;
@@ -584,7 +583,7 @@
 
                                     iAr.push(i);
                                 })
-                            }, 1000 * i);
+                            }, 10000 * i);
                         }
                     }
                     if(pages) {
@@ -593,7 +592,6 @@
                                 $.ajax({
                                     type: "POST",
                                     url: '/bitrix/admin/umax_global_analysis_empty.php',
-                                    async: false,
                                     data: {
                                         <?if($_GET['detail']):?>
                                             pages: pages
