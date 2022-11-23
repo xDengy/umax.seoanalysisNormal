@@ -14,15 +14,6 @@ class AdminAreaSeoAnalysis
             '/bitrix/admin/iblock_element_edit.php',
             '/bitrix/admin/iblock_section_edit.php',
         ];
-
-        function get_include_contents($filename) {
-            if (is_file($filename)) {
-                ob_start();
-                include_once $filename;
-                return ob_get_clean();
-            }
-            return false;
-        }
         
         $seoBlock = \CIBlock::GetList([], ['ID' => $_REQUEST['IBLOCK_ID']], false, false, [])->Fetch();
         if(in_array($curPage, $workPages) && isset($_REQUEST['ID']) && Loader::includeModule('umax.seoanalysis') && !\UmaxAnalysisDataManager::isDemoEnd()) {
