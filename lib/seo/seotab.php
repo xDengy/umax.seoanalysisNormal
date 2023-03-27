@@ -7,7 +7,7 @@ use Bitrix\Main\Loader;
 
 class UmaxAnalysisTab
 {
-    function UmaxShowTab(&$form)
+    static function UmaxShowTab(&$form)
     {
         global $APPLICATION;
 

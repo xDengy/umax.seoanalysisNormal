@@ -16,7 +16,8 @@ if (!Loader::includeModule('umax.seoanalysis') || \UmaxAnalysisDataManager::isDe
     echo CAdminMessage::ShowOldStyleError("Модуль не установлен");
 } else {
     function getUrls($arr) {
-        return $arr['loc'];
+        if(is_array($arr))
+            return trim($arr['loc']);
     }
     
     $seotable = UmaxSeoAnalysisTable::getList()->Fetch();
@@ -48,23 +49,25 @@ if (!Loader::includeModule('umax.seoanalysis') || \UmaxAnalysisDataManager::isDe
     ])->FetchAll();
 
     $pages = [];
-    while(true) {
-        if($i == 0)
-            $sitemapIndex = '';
-        else
-            $sitemapIndex = $i;
-
-        $name = $_SERVER["DOCUMENT_ROOT"] . '/' . 'sitemap' . $sitemapIndex . '.xml';
-        if(file_exists($name)) {
-            $sitemapfile = file_get_contents($name); 
-            $xml = simplexml_load_string($sitemapfile);
-            $con = json_decode(json_encode($xml), true);
-            $pages = array_merge($pages, array_map('getUrls', $con['url']));
-        } else {
-            break;
+    $files = scandir($_SERVER["DOCUMENT_ROOT"] . '/');
+    foreach($files as $file) {
+        if(str_contains($file, 'sitemap') && str_contains($file, '.xml')) {
+            $name = $_SERVER["DOCUMENT_ROOT"] . '/' . $file;
+            if(file_exists($name)) {
+                $sitemapfile = file_get_contents($name); 
+                $xml = simplexml_load_string($sitemapfile);
+                $con = json_decode(json_encode($xml), true);
+                if(array_key_exists('url', $con)) {
+                    $getUrlsAr = array_map('getUrls', $con['url']);
+                    $pages = array_merge($pages, $getUrlsAr);
+                }
+            }
         }
+
         $i++;
     }
+    $pages = array_filter($pages, fn($value) => !is_null($value) && $value !== '');
+    $pages = array_unique($pages, SORT_REGULAR);
     $pages = count($pages);
 
     $data = [
@@ -917,9 +920,9 @@ if (!Loader::includeModule('umax.seoanalysis') || \UmaxAnalysisDataManager::isDe
                 
 
             var analysis = {
-                "SEO onPage": Math.round((<?=count($seoOnPage['NORMAL'])?> * 100) / <?=count($seoOnPage['ALL'])?>),
+                "SEO onPage": Math.round((<?=count($seoOnPage['NORMAL']) ?? 0?> * 100) / <?=count($seoOnPage['ALL']) !== 0 ? count($seoOnPage['ALL']) : 1?>),
                 "Коммерция": <?=$seotable['SUMMARY_COMMERCE']?>,
-                "Индексация": Math.round((<?=$seotable['PAGES_INDEX']?> * 100) / <?=$seotable['SUMMARY_INDEX']?>),
+                "Индексация": Math.round((<?=$seotable['PAGES_INDEX']?> * 100) / <?=$seotable['SUMMARY_INDEX'] !== 0 ? $seotable['SUMMARY_INDEX'] : 1?>),
                 "Мета-теги": metaResult,
                 "Изображения": <?=$summaryImages?>,
             };

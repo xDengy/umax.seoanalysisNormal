@@ -15,42 +15,64 @@
         echo CAdminMessage::ShowOldStyleError("Модуль не установлен");
     } else {
         function getUrls($arr) {
-            return $arr['loc'];
+            if(is_array($arr))
+                return trim($arr['loc']);
         }
 
         $i = 0;
-        $pages = [];
-        $sitemap = [];
-        while(true) {
-            if($i == 0)
-                $sitemapIndex = '';
-            else
-                $sitemapIndex = $i;
+        // $pages = [];
+        // $sitemap = [];
+        // while(true) {
+        //     if($i == 0)
+        //         $sitemapIndex = '';
+        //     else
+        //         $sitemapIndex = $i;
 
-            $name = $_SERVER["DOCUMENT_ROOT"] . '/' . 'sitemap' . $sitemapIndex . '.xml';
-            if(file_exists($name)) {
-                $sitemapfile = file_get_contents($name); 
-                $xml = simplexml_load_string($sitemapfile);
-                $con = json_decode(json_encode($xml), true);
-                if(array_key_exists('url', $con))
-                    $pages = array_merge($pages, array_map('getUrls', $con['url']));
-                else {
-                    $sitemap = array_merge($sitemap, array_map('getUrls', $con['sitemap']));
+        //     $name = $_SERVER["DOCUMENT_ROOT"] . '/' . 'sitemap' . $sitemapIndex . '.xml';
+        //     if(file_exists($name)) {
+        //         $sitemapfile = file_get_contents($name); 
+        //         $xml = simplexml_load_string($sitemapfile);
+        //         $con = json_decode(json_encode($xml), true);
+        //         if(array_key_exists('url', $con))
+        //             $pages = array_merge($pages, array_map('getUrls', $con['url']));
+        //         else {
+        //             $sitemap = array_merge($sitemap, array_map('getUrls', $con['sitemap']));
+        //         }
+        //     } else {
+        //         break;
+        //     }
+        //     $i++;
+        // }
+        // if(count($sitemap) > 0) {
+        //     foreach ($sitemap as $key => $value) {
+        //         $sitemapfile = file_get_contents($value); 
+        //         $xml = simplexml_load_string($sitemapfile);
+        //         $con = json_decode(json_encode($xml), true);
+        //         if(array_key_exists('url', $con))
+        //             $pages = array_merge($pages, array_map('getUrls', $con['url']));
+        //     }
+        // }
+
+        $pages = [];
+        $files = scandir($_SERVER["DOCUMENT_ROOT"] . '/');
+        foreach($files as $file) {
+            if(str_contains($file, 'sitemap') && str_contains($file, '.xml')) {
+                $name = $_SERVER["DOCUMENT_ROOT"] . '/' . $file;
+                if(file_exists($name)) {
+                    $sitemapfile = file_get_contents($name); 
+                    $xml = simplexml_load_string($sitemapfile);
+                    $con = json_decode(json_encode($xml), true);
+                    if(array_key_exists('url', $con)) {
+                        $getUrlsAr = array_map('getUrls', $con['url']);
+                        $pages = array_merge($pages, $getUrlsAr);
+                    }
                 }
-            } else {
-                break;
             }
+
             $i++;
         }
-        if(count($sitemap) > 0) {
-            foreach ($sitemap as $key => $value) {
-                $sitemapfile = file_get_contents($value); 
-                $xml = simplexml_load_string($sitemapfile);
-                $con = json_decode(json_encode($xml), true);
-                if(array_key_exists('url', $con))
-                    $pages = array_merge($pages, array_map('getUrls', $con['url']));
-            }
-        }
+        $pages = array_filter($pages, fn($value) => !is_null($value) && $value !== '');
+        $pages = array_unique($pages, SORT_REGULAR);
         
         $settings = UmaxSeoSettingsTable::getList()->FetchAll();
 
@@ -587,6 +609,7 @@
                         }
                     }
                     if(pages) {
+                        pages = Object.values(pages)
                         if(pages.length > 0) {
                             if(!seo) {
                                 $.ajax({

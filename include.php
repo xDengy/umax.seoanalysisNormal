@@ -232,10 +232,13 @@ class UmaxAnalysisDataManager extends Bitrix\Main\Entity\DataManager
     public static function getMainZone($dom) {
         $anyElems = $dom->getElementsByTagName('*');
         $headerId = 0;
-        $footerId = $anyElems - 1;
+        $footerId = $anyElems->count() - 1;
         foreach ($anyElems as $key => $value) {
             if($value->parentNode->tagName == 'body' && $value->tagName !== 'script' && $value->tagName !== 'style') {
                 $any[$key] = $value;
+                if($value->classList == null) {
+                    $value->classList = [];
+                }
                 if($value->tagName == 'header' || in_array('header', $value->classList))
                     $headerId = $key;
                 if($value->tagName == 'footer' || in_array('footer', $value->classList))

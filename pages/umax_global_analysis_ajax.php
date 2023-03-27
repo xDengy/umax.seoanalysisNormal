@@ -89,7 +89,7 @@
         $fullAr = [];
 
         $dom = new \DOMDocument;
-        $getContents = file_get_contents($page . '/');
+        $getContents = file_get_contents($page);
         $dom->loadHTML($getContents);
 
         $links = $dom->getElementsByTagName('link');
@@ -203,7 +203,7 @@
         if($page == $get)
             $indexesAr['reasons'][] = 'страницы не 2хх';
                 
-        if(count($indexesAr['reasons']) > 0)
+        if(is_array($indexesAr['reasons']))
             $indexesAr['reasons'] = json_encode($indexesAr['reasons']);
         
         $summaryAr['seo_on_page'] = 0;

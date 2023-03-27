@@ -47,7 +47,14 @@ class UmaxCommerceTable extends \UmaxAnalysisDataManager
         return $needle !== '' && mb_strpos($haystack, $needle) !== false;
     }
 
-    public static function getTemplateContent($content, $type, $contacts = false, $about = false) {
+    public static function getNodeInnerHTML($nodes)
+    {
+        $result = '';
+        $result .= $nodes->ownerDocument->saveHtml($nodes);
+        return $result;
+    }
+
+    public static function getTemplateContent($content, $type, $contacts = false, $about = false, $page) {
         $aboutAr = [
             'о себе',
             'о компании',
@@ -111,9 +118,16 @@ class UmaxCommerceTable extends \UmaxAnalysisDataManager
         ];
 
         $commerce = 0;
-        $a = $content->evaluate('a');
-        $ar = [];
+        
+        $content = self::getNodeInnerHTML($content);
+
         $reasonsAr = [];
+
+        $dom = new \DOMDocument;
+        $dom->loadHTML($content);
+        $dom = new \DOMXpath($dom);
+
+        $a = $dom->evaluate('//a');
         foreach($a as $aValue) {
             if(\Umax\Lib\Internals\UmaxCommerceTable::str_contains(trim(mb_strtolower($aValue->textContent)), '+79') || \Umax\Lib\Internals\UmaxCommerceTable::str_contains(trim(mb_strtolower($aValue->textContent)), '88')) {
                 $commerce++;
@@ -263,12 +277,13 @@ class UmaxCommerceTable extends \UmaxAnalysisDataManager
 
     public static function getContent()
     {
-        $page = $_SERVER['HTTP_X_FORWARDED_PROTO'] . '://' . $_SERVER['SERVER_NAME'];
+        $page = explode('bitrix/', $_SERVER['HTTP_REFERER'])[0];
         $commerce = 0;
 
         $dom = new \DOMDocument;
-        $getContents = file_get_contents($page . '/');
+        $getContents = file_get_contents($page);
         $dom->loadHTML($getContents);
+        $domBase = $page;
         $dom = new \DOMXpath($dom);
 
         $contacts = false;
@@ -327,19 +342,21 @@ class UmaxCommerceTable extends \UmaxAnalysisDataManager
             'страница о нас/о компании наличие сертификатов/наград/дипломов' => 'Нет',
         ];
         
-        $header = $dom->evaluate('header');
-        if(isset($header) && array_key_exists(0, $header)) {
-            $header = $header[0];
-            $headerContent = \Umax\Lib\Internals\UmaxCommerceTable::getTemplateContent($header, 'хидер', $contacts, $about);
+        $header = $dom->evaluate('//header');
+
+        if(isset($header) && $header->length > 0) {
+            $header = $header->item(0);
+            $headerContent = \Umax\Lib\Internals\UmaxCommerceTable::getTemplateContent($header, 'хидер', $contacts, $about, $domBase);
             $commerce += $headerContent['commerce'];
             $contacts = $headerContent['contacts'];
             $about = $headerContent['about'];
+            p($headerContent);
             $reasonsAr = array_merge($reasonsAr, $headerContent['reasonsAr']);
         } else {
             $header = $dom->evaluate('.header');
-            if(isset($header) && array_key_exists(0, $header)) {
-                $header = $header[0];
-                $headerContent = \Umax\Lib\Internals\UmaxCommerceTable::getTemplateContent($header, 'хидер', $contacts, $about);
+            if(isset($header) && $header->length > 0) {
+                $header = $header->item(0);
+                $headerContent = \Umax\Lib\Internals\UmaxCommerceTable::getTemplateContent($header, 'хидер', $contacts, $about, $domBase);
                 $commerce += $headerContent['commerce'];
                 $contacts = $headerContent['contacts'];
                 $about = $headerContent['about'];
@@ -348,18 +365,19 @@ class UmaxCommerceTable extends \UmaxAnalysisDataManager
         }
         
         $footer = $dom->evaluate('footer');
-        if(isset($footer) && array_key_exists(0, $footer)) {
-            $footer = $footer[0];
-            $footerContent = \Umax\Lib\Internals\UmaxCommerceTable::getTemplateContent($footer, 'футер', $contacts, $about);
+        
+        if(isset($footer) && $footer->length > 0) {
+            $footer = $footer->item(0);
+            $footerContent = \Umax\Lib\Internals\UmaxCommerceTable::getTemplateContent($footer, 'футер', $contacts, $about, $domBase);
             $commerce += $footerContent['commerce'];
             $contacts = $footerContent['contacts'];
             $about = $footerContent['about'];
             $reasonsAr = array_merge($reasonsAr, $footerContent['reasonsAr']);
         } else {
             $footer = $dom->evaluate('.footer');
-            if(isset($footer) && array_key_exists(0, $footer)) {
-                $footer = $footer[0];
-                $footerContent = \Umax\Lib\Internals\UmaxCommerceTable::getTemplateContent($footer, 'футер', $contacts, $about);
+            if(isset($footer) && $footer->length > 0) {
+                $footer = $footer->item(0);
+                $footerContent = \Umax\Lib\Internals\UmaxCommerceTable::getTemplateContent($footer, 'футер', $contacts, $about, $domBase);
                 $commerce += $footerContent['commerce'];
                 $contacts = $footerContent['contacts'];
                 $about = $footerContent['about'];
@@ -426,7 +444,7 @@ class UmaxCommerceTable extends \UmaxAnalysisDataManager
 
             $contactsImages = [];
             foreach ($anyElems as $key => $value) {
-                $contactsTemplateContent = \Umax\Lib\Internals\UmaxCommerceTable::getTemplateContent($value, 'страница контактов');
+                $contactsTemplateContent = \Umax\Lib\Internals\UmaxCommerceTable::getTemplateContent($value, 'страница контактов', false, false, $domBase);
                 $commerce += $contactsTemplateContent['commerce'];
                 $reasonsAr = array_merge($reasonsAr, $contactsTemplateContent['reasonsAr']);
 
