@@ -29,8 +29,6 @@ Class umax_seoanalysis extends CModule
 
   function InstallEvents()
   {
-    global $DOCUMENT_ROOT, $APPLICATION;
-    
     RegisterModuleDependences(
       "main",
       "OnEndBufferContent",
@@ -62,8 +60,6 @@ Class umax_seoanalysis extends CModule
 
   function UnInstallEvents()
   {
-    global $DOCUMENT_ROOT, $APPLICATION;
-    
     UnRegisterModuleDependences(
       "main", 
       "OnEndBufferContent",

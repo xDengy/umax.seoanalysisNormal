@@ -125,10 +125,12 @@ class UmaxCommerceTable extends \UmaxAnalysisDataManager
 
         $dom = new \DOMDocument;
         $dom->loadHTML($content);
+        $oldDom = $dom;
         $dom = new \DOMXpath($dom);
-
         $a = $dom->evaluate('//a');
+        $innerHTML = self::DOMinnerHTML($oldDom);
         foreach($a as $aValue) {
+            p([$aValue->textContent, 'link text'], true);
             if(\Umax\Lib\Internals\UmaxCommerceTable::str_contains(trim(mb_strtolower($aValue->textContent)), '+79') || \Umax\Lib\Internals\UmaxCommerceTable::str_contains(trim(mb_strtolower($aValue->textContent)), '88')) {
                 $commerce++;
                 $reasonsAr[$type . ' наличие номера телефона'] = 'Да';
@@ -140,6 +142,7 @@ class UmaxCommerceTable extends \UmaxAnalysisDataManager
             }
             if($phoneCheck)
                 continue;
+
             if(\Umax\Lib\Internals\UmaxCommerceTable::str_contains(trim(mb_strtolower($aValue->textContent)), '@')) {
                 $commerce++;
                 $reasonsAr[$type . ' наличие адреса почты'] = 'Да';
@@ -232,7 +235,8 @@ class UmaxCommerceTable extends \UmaxAnalysisDataManager
                 continue;
         }
         foreach($days as $day) {
-            if(\Umax\Lib\Internals\UmaxCommerceTable::str_contains(mb_strtolower($content->innerHTML), $day)) {
+            p([$innerHTML, 'inner'], true);
+            if(\Umax\Lib\Internals\UmaxCommerceTable::str_contains(mb_strtolower($innerHTML), $day)) {
                 $commerce++;
                 $reasonsAr[$type . ' наличие графика работы'] = 'Да';
                 $dayCheck = 1;
@@ -243,7 +247,8 @@ class UmaxCommerceTable extends \UmaxAnalysisDataManager
         }
         if($type !== 'страница контактов') {
             foreach($calls as $call) {
-                if(\Umax\Lib\Internals\UmaxCommerceTable::str_contains(mb_strtolower($content->innerHTML), $call)) {
+                p([$innerHTML, 'inner'], true);
+                if(\Umax\Lib\Internals\UmaxCommerceTable::str_contains(mb_strtolower($innerHTML), $call)) {
                     $commerce++;
                     $reasonsAr[$type . ' наличие форм связи'] = 'Да';
                     $callCheck = 1;
@@ -255,7 +260,8 @@ class UmaxCommerceTable extends \UmaxAnalysisDataManager
         }
         if($type == 'футер' || $type == 'страница контактов') {
             foreach($addresses as $address) {
-                if(in_array($address, explode(' ', $content->innerHTML))) {
+                p([$innerHTML, 'inner'], true);
+                if(in_array($address, explode(' ', $innerHTML))) {
                     $commerce++;
                     $reasonsAr[$type . ' наличие адреса'] = 'Да';
                     $addressCheck = 1;
@@ -266,7 +272,8 @@ class UmaxCommerceTable extends \UmaxAnalysisDataManager
             }
         }
         if($type == 'страница контактов') {
-            $h1 = $content->evaluate('h1')[0];
+            $h1 = $dom->evaluate('h1')[0];
+            p([$h1, 'h1'], true);
             if(strlen($h1->textContent) > 0) {
                 $reasonsAr[$type . ' наличие h1'] = 'Да';
                 $commerce++;
@@ -274,6 +281,21 @@ class UmaxCommerceTable extends \UmaxAnalysisDataManager
         }
         return ['commerce' => $commerce, 'about' => $about, 'contacts' => $contacts, 'reasonsAr' => $reasonsAr];
     }
+
+    public static function DOMinnerHTML(\DOMNode $element) 
+    { 
+        $innerHTML = ""; 
+        $children  = $element->childNodes;
+
+        foreach ($children as $child) 
+        { 
+                $innerHTML .= $element->saveHTML($child);
+        }
+
+        return $innerHTML;
+    }
+
+   
 
     public static function getContent()
     {
@@ -350,7 +372,6 @@ class UmaxCommerceTable extends \UmaxAnalysisDataManager
             $commerce += $headerContent['commerce'];
             $contacts = $headerContent['contacts'];
             $about = $headerContent['about'];
-            p($headerContent);
             $reasonsAr = array_merge($reasonsAr, $headerContent['reasonsAr']);
         } else {
             $header = $dom->evaluate('.header');

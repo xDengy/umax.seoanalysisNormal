@@ -400,9 +400,9 @@ class UmaxAnalysisTab
             if($content) {
                 $form->tabs[] = array("DIV" => "seoOnPage", "TAB" => "Seo OnPage", "ICON"=>"main_user_edit", "TITLE"=>"Seo OnPage", "CONTENT"=> '
                 <script src="https://code.jquery.com/jquery-3.5.0.js"></script>
-                <link rel="stylesheet" href="/bitrix/modules/umax.seoanalysis/lib/assets/tab.css">
-                <link rel="stylesheet" href="/bitrix/modules/umax.seoanalysis/lib/assets/fonts.css">
-                <script src="/bitrix/modules/umax.seoanalysis/lib/assets/tab.js"></script>
+                <link rel="stylesheet" href="/bitrix/themes/.default/umax.seoanalysis/tab.css">
+                <link rel="stylesheet" href="/bitrix/themes/.default/umax.seoanalysis/fonts.css">
+                <script src="/bitrix/themes/.default/umax.seoanalysis/tab.js"></script>
                 <div class="seoOnPage">
                 '.$content.'
                 <div class="loading"></div>

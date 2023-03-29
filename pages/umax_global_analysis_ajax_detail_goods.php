@@ -14,7 +14,6 @@
             function get_http_code($url) {
                 $handle = curl_init($url);
                 curl_setopt($handle,  CURLOPT_RETURNTRANSFER, TRUE);
-                $response = curl_exec($handle);
                 $httpCode = curl_getinfo($handle, CURLINFO_HTTP_CODE);
                 curl_close($handle);
                 return $httpCode;
@@ -171,7 +170,11 @@
             if(str_contains($curForm, 'оставить отзыв') || str_contains($curForm, 'отправить на модерацию') || str_contains($curForm, 'разместить отзыв') || str_contains($curForm, 'оставить комментарий'))
                 $formCheck = true;
         }
-        $images = array_merge($images, $domNode->getElementsByTagName('images'));
+        $domElAr = [];
+        foreach($domNode->getElementsByTagName('images') as $domEl) {
+            $domElAr[] = $domEl;
+        }
+        $images = array_merge($images, $domElAr);
         $checkImages = $domNode->getElementsByTagName('images');
         foreach ($checkImages as $img) {
             if($img->getAttribute('alt') && $img->getAttribute('alt') !== '')
@@ -194,9 +197,21 @@
         } else {
             $videoCheck = true;
         }
-        $ul = array_merge($ul, $domNode->getElementsByTagName('ul'));
-        $ol = array_merge($ol, $domNode->getElementsByTagName('ol'));
-        $table = array_merge($table, $domNode->getElementsByTagName('table'));
+        $domElAr = [];
+        foreach($domNode->getElementsByTagName('ul') as $domEl) {
+            $domElAr[] = $domEl;
+        }
+        $ul = array_merge($ul, $domElAr);
+        $domElAr = [];
+        foreach($domNode->getElementsByTagName('ol') as $domEl) {
+            $domElAr[] = $domEl;
+        }
+        $ol = array_merge($ol, $domElAr);
+        $domElAr = [];
+        foreach($domNode->getElementsByTagName('table') as $domEl) {
+            $domElAr[] = $domEl;
+        }
+        $table = array_merge($table, $domElAr);
 
         if(count($ul) == 0 && count($ol) == 0 && count($table) == 0)
             $errors['LISTS'] = 'LISTS';

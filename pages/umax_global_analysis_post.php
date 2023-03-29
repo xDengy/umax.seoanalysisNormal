@@ -20,38 +20,6 @@
         }
 
         $i = 0;
-        // $pages = [];
-        // $sitemap = [];
-        // while(true) {
-        //     if($i == 0)
-        //         $sitemapIndex = '';
-        //     else
-        //         $sitemapIndex = $i;
-
-        //     $name = $_SERVER["DOCUMENT_ROOT"] . '/' . 'sitemap' . $sitemapIndex . '.xml';
-        //     if(file_exists($name)) {
-        //         $sitemapfile = file_get_contents($name); 
-        //         $xml = simplexml_load_string($sitemapfile);
-        //         $con = json_decode(json_encode($xml), true);
-        //         if(array_key_exists('url', $con))
-        //             $pages = array_merge($pages, array_map('getUrls', $con['url']));
-        //         else {
-        //             $sitemap = array_merge($sitemap, array_map('getUrls', $con['sitemap']));
-        //         }
-        //     } else {
-        //         break;
-        //     }
-        //     $i++;
-        // }
-        // if(count($sitemap) > 0) {
-        //     foreach ($sitemap as $key => $value) {
-        //         $sitemapfile = file_get_contents($value); 
-        //         $xml = simplexml_load_string($sitemapfile);
-        //         $con = json_decode(json_encode($xml), true);
-        //         if(array_key_exists('url', $con))
-        //             $pages = array_merge($pages, array_map('getUrls', $con['url']));
-        //     }
-        // }
 
         $pages = [];
         $files = scandir($_SERVER["DOCUMENT_ROOT"] . '/');
@@ -112,7 +80,7 @@
                                 $settingAr[$value['TYPE']][$value['IBLOCK_ID']][$sectKey]['items'][] = [
                                     'type' => $value['TYPE'],
                                     'id' => $arElement['ID'],
-                                    'page' => $_SERVER['HTTP_X_FORWARDED_PROTO'] . '://' . $_SERVER['HTTP_HOST'] . $arElement['DETAIL_PAGE_URL'],
+                                    'page' => explode('/bitrix/',$_SERVER['HTTP_REFERER'])[0] . $arElement['DETAIL_PAGE_URL'],
                                     'name' => $arElement['NAME']
                                 ];
                             }
@@ -137,7 +105,7 @@
                     $settingAr[$value['TYPE']][$value['IBLOCK_ID']]['items'][] = [
                         'type' => $value['TYPE'],
                         'id' => $arElement['ID'],
-                        'page' => $_SERVER['HTTP_X_FORWARDED_PROTO'] . '://' . $_SERVER['HTTP_HOST'] . $arElement['DETAIL_PAGE_URL'],
+                        'page' => explode('/bitrix/',$_SERVER['HTTP_REFERER'])[0] . $arElement['DETAIL_PAGE_URL'],
                         'name' => $arElement['NAME']
                     ];
                 }
@@ -499,6 +467,7 @@
                                 }
                             }
                         }
+                        
                         let countList = document.querySelector('.count__list')
                         let back = document.querySelector('.download__btn#back')
                         let elems__arr = document.querySelector('#elems__arr')

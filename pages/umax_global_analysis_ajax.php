@@ -66,6 +66,7 @@
         foreach($settingsTable as $value) {
             $block = \CIBlock::GetById($value['IBLOCK_ID'])->Fetch();
 
+            $block['LIST_PAGE_URL'] = str_replace('#SITE_DIR#', '', $block['LIST_PAGE_URL']);
             if(str_contains($pageNew, $block['LIST_PAGE_URL']))
                 $pageType = $value['TYPE'];
         }
@@ -162,7 +163,7 @@
                 
                 $src = $node->getAttribute('src');
                 if(!str_contains($node->getAttribute('src'), 'https://') || !str_contains($node->getAttribute('src'), 'https://'))
-                    $src = $_SERVER['HTTP_X_FORWARDED_PROTO'] . '://' . $_SERVER['SERVER_NAME'] . $src;
+                    $src = explode('/bitrix/',$_SERVER['HTTP_REFERER'])[0] . $src;
 
                 $imgSizeValue = round(get_headers($src, 1)["Content-Length"] / 1024);
                 $imagesAr[$k]['img_url'] = $src;
@@ -184,7 +185,7 @@
         if($status == '4')
             $error = $page;
 
-        if(in_array('Disallow: '. explode($_SERVER['HTTP_X_FORWARDED_PROTO'] . '://' . $_SERVER['SERVER_NAME'], $page)[1] , $robotsTxtExploded))
+        if(in_array('Disallow: '. explode(explode('/bitrix/',$_SERVER['HTTP_REFERER'])[0], $page)[1] , $robotsTxtExploded))
             $robotsInTxt = $page;
 
         if($page == $robotsInTxt || $page == $robotContent || $page == $linkContent || $page == $get || $page == $error) {
