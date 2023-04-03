@@ -118,7 +118,13 @@ class UmaxCommerceTable extends \UmaxAnalysisDataManager
         ];
 
         $commerce = 0;
-        
+        debug([
+            $content, 
+            $type, 
+            $contacts, 
+            $about, 
+            $page
+        ]);
         $content = self::getNodeInnerHTML($content);
 
         $reasonsAr = [];
@@ -413,13 +419,13 @@ class UmaxCommerceTable extends \UmaxAnalysisDataManager
             $anyElems = parent::getMainZone($aboutDom);
             $aboutImages = [];
             foreach ($anyElems as $key => $value) {
-                $aboutImages = array_merge($aboutImages, $value->evaluate('img'));
-                $video = $value->evaluate('video')[0];
+                $aboutImages = array_merge($aboutImages, $value->getElementsByTagName('img'));
+                $video = $value->getElementsByTagName('video')[0];
                 if($video) {
                     $reasonsAr['страница о нас/о компании наличие видео'] = 'Да';
                     $commerce++;
                 } else {
-                    $videoA = $value->evaluate('a');
+                    $videoA = $value->getElementsByTagName('a');
                     foreach ($videoA as $a) {
                         if(\Umax\Lib\Internals\UmaxCommerceTable::str_contains($a->getAttribute('href'), 'youtube')) {
                             $reasonsAr['страница о нас/о компании наличие видео'] = 'Да';
@@ -467,19 +473,19 @@ class UmaxCommerceTable extends \UmaxAnalysisDataManager
                 $commerce += $contactsTemplateContent['commerce'];
                 $reasonsAr = array_merge($reasonsAr, $contactsTemplateContent['reasonsAr']);
 
-                $images = $value->evaluate('img');
+                $images = $value->getElementsByTagName('img');
                 foreach ($images as $img) {
                     $src = $img->getAttribute('src');
                     $type = explode('.', $src)[1];
                     if(mb_strtolower($type) == 'jpg' || mb_strtolower($type) == 'png' || mb_strtolower($type) == 'jpeg')
                         $contactsImages[] = $img;
                 }
-                $map = $value->evaluate('ymaps')[0];
+                $map = $value->getElementsByTagName('ymaps')[0];
                 if($map) {
                     $reasonsAr['страница контактов наличие карты'] = 'Да';
                     $commerce++;
                 } else {
-                    $mapA = $value->evaluate('a');
+                    $mapA = $value->getElementsByTagName('a');
                     foreach ($mapA as $a) {
                         if(\Umax\Lib\Internals\UmaxCommerceTable::str_contains($a->getAttribute('href'), 'google.com/maps')) {
                             $commerce++;
@@ -488,7 +494,7 @@ class UmaxCommerceTable extends \UmaxAnalysisDataManager
                         }
                     }
                 }
-                $form = $value->evaluate('form')[0];
+                $form = $value->getElementsByTagName('form')[0];
                 if($form) {
                     $reasonsAr['страница контактов наличие формы'] = 'Да';
                     $commerce++;
@@ -547,4 +553,5 @@ class UmaxCommerceTable extends \UmaxAnalysisDataManager
         return $commerce;
     }
 }
+
 
