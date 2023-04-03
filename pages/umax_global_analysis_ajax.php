@@ -91,7 +91,7 @@
 
         $dom = new \DOMDocument;
         $getContents = file_get_contents($page);
-        $dom->loadHTML($getContents);
+        $dom->loadHTML('<?xml encoding="utf-8" ?>' . $getContents);
 
         $links = $dom->getElementsByTagName('link');
         $linkContent = [];
@@ -149,11 +149,13 @@
             {
                 $imagesAr[$k]['page_url'] = $page;
 
-                $imagesAr[$k]['alt'] = iconv("UTF-8", "ISO-8859-1//TRANSLIT", $node->getAttribute('alt'));
+                // $imagesAr[$k]['alt'] = iconv("UTF-8", "ISO-8859-1//TRANSLIT", $node->getAttribute('alt'));
+                $imagesAr[$k]['alt'] = $node->getAttribute('alt');
                 if(!$node->hasAttribute('alt') || $node->getAttribute('alt') == '')
                     $emptyAlt[] = $node;
 
-                $imagesAr[$k]['title'] = iconv("UTF-8", "ISO-8859-1//TRANSLIT", $node->getAttribute('title'));
+                // $imagesAr[$k]['title'] = iconv("UTF-8", "ISO-8859-1//TRANSLIT", $node->getAttribute('title'));
+                $imagesAr[$k]['title'] = $node->getAttribute('title');
                 if(!$node->hasAttribute('title') || $node->getAttribute('title') == '')
                     $emptyTitle[] = $node;
                     

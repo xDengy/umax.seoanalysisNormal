@@ -50,7 +50,7 @@
 
         $dom = new \DOMDocument;
         $getContents = file_get_contents($page);
-        $dom->loadHTML($getContents);
+        $dom->loadHTML('<?xml encoding="utf-8" ?>' . $getContents);
 
         $titleAr = [
             'цена', 'гарантия', 'руб', 'цены', 'прайс', 'стоимость'

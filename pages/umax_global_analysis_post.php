@@ -24,7 +24,7 @@
         $pages = [];
         $files = scandir($_SERVER["DOCUMENT_ROOT"] . '/');
         foreach($files as $file) {
-            if(str_contains($file, 'sitemap') && str_contains($file, '.xml')) {
+            if(UmaxCommerceTable::str_contains($file, 'sitemap') && UmaxCommerceTable::str_contains($file, '.xml')) {
                 $name = $_SERVER["DOCUMENT_ROOT"] . '/' . $file;
                 if(file_exists($name)) {
                     $sitemapfile = file_get_contents($name); 
@@ -43,7 +43,6 @@
         $pages = array_unique($pages, SORT_REGULAR);
         
         $settings = UmaxSeoSettingsTable::getList()->FetchAll();
-
         $settingAr = [];
         foreach($settings as $setting => $value) {
             $rsElement = CIBlockSection::GetList(

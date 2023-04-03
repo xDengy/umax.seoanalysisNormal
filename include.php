@@ -230,7 +230,7 @@ class UmaxAnalysisDataManager extends Bitrix\Main\Entity\DataManager
     }
     
     public static function getMainZone($dom) {
-        $anyElems = $dom->getElementsByTagName('*');
+        $anyElems = $dom->evaluate('*');
         $headerId = 0;
         $footerId = $anyElems->count() - 1;
         foreach ($anyElems as $key => $value) {

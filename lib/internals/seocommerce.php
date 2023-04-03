@@ -124,14 +124,16 @@ class UmaxCommerceTable extends \UmaxAnalysisDataManager
         $reasonsAr = [];
 
         $dom = new \DOMDocument;
-        $dom->loadHTML($content);
+        $dom->loadHTML('<?xml encoding="utf-8" ?>' . $content);
         $oldDom = $dom;
         $dom = new \DOMXpath($dom);
         $a = $dom->evaluate('//a');
         $innerHTML = self::DOMinnerHTML($oldDom);
         foreach($a as $aValue) {
-            p([$aValue->textContent, 'link text'], true);
-            if(\Umax\Lib\Internals\UmaxCommerceTable::str_contains(trim(mb_strtolower($aValue->textContent)), '+79') || \Umax\Lib\Internals\UmaxCommerceTable::str_contains(trim(mb_strtolower($aValue->textContent)), '88')) {
+            if(\Umax\Lib\Internals\UmaxCommerceTable::str_contains(trim(mb_strtolower($aValue->textContent)), '+79') || 
+                \Umax\Lib\Internals\UmaxCommerceTable::str_contains(trim(mb_strtolower($aValue->textContent)), '89') ||
+                \Umax\Lib\Internals\UmaxCommerceTable::str_contains(trim(mb_strtolower($aValue->textContent)), '88') ||
+                \Umax\Lib\Internals\UmaxCommerceTable::str_contains(trim(mb_strtolower($aValue->textContent)), '+78')) {
                 $commerce++;
                 $reasonsAr[$type . ' наличие номера телефона'] = 'Да';
                 if('tel:' . trim(mb_strtolower($aValue->textContent)) == $aValue->getAttribute('href')) {
@@ -235,7 +237,6 @@ class UmaxCommerceTable extends \UmaxAnalysisDataManager
                 continue;
         }
         foreach($days as $day) {
-            p([$innerHTML, 'inner'], true);
             if(\Umax\Lib\Internals\UmaxCommerceTable::str_contains(mb_strtolower($innerHTML), $day)) {
                 $commerce++;
                 $reasonsAr[$type . ' наличие графика работы'] = 'Да';
@@ -247,7 +248,6 @@ class UmaxCommerceTable extends \UmaxAnalysisDataManager
         }
         if($type !== 'страница контактов') {
             foreach($calls as $call) {
-                p([$innerHTML, 'inner'], true);
                 if(\Umax\Lib\Internals\UmaxCommerceTable::str_contains(mb_strtolower($innerHTML), $call)) {
                     $commerce++;
                     $reasonsAr[$type . ' наличие форм связи'] = 'Да';
@@ -260,7 +260,6 @@ class UmaxCommerceTable extends \UmaxAnalysisDataManager
         }
         if($type == 'футер' || $type == 'страница контактов') {
             foreach($addresses as $address) {
-                p([$innerHTML, 'inner'], true);
                 if(in_array($address, explode(' ', $innerHTML))) {
                     $commerce++;
                     $reasonsAr[$type . ' наличие адреса'] = 'Да';
@@ -273,7 +272,6 @@ class UmaxCommerceTable extends \UmaxAnalysisDataManager
         }
         if($type == 'страница контактов') {
             $h1 = $dom->evaluate('h1')[0];
-            p([$h1, 'h1'], true);
             if(strlen($h1->textContent) > 0) {
                 $reasonsAr[$type . ' наличие h1'] = 'Да';
                 $commerce++;

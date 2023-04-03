@@ -17,8 +17,7 @@ class AdminAreaSeoAnalysis
         
         $seoBlock = \CIBlock::GetList([], ['ID' => $_REQUEST['IBLOCK_ID']], false, false, [])->Fetch();
         if(in_array($curPage, $workPages) && isset($_REQUEST['ID']) && Loader::includeModule('umax.seoanalysis') && !\UmaxAnalysisDataManager::isDemoEnd()) {
-
-            if($seoBlock['CODE'] !== 'seo_filters') {
+            if (!Loader::includeModule('umax.seocatalog') || \UmaxDataManager::isDemoEnd()) {
                 $curElemPageUrl = \CIBlockSection::GetList([], ['IBLOCK_ID' => $_REQUEST['IBLOCK_ID'], 'ID' => $_REQUEST['ID']], false, false, [])->GetNext()['SECTION_PAGE_URL'];
                 $curListPageUrl = \CIBlockSection::GetList([], ['IBLOCK_ID' => $_REQUEST['IBLOCK_ID'], 'ID' => $_REQUEST['ID']], false, false, [])->GetNext()['LIST_PAGE_URL'];
                 if($curElemPageUrl && $curPage == '/bitrix/admin/iblock_section_edit.php'):
@@ -26,7 +25,7 @@ class AdminAreaSeoAnalysis
                         <script>
                             document.addEventListener('DOMContentLoaded', function(){
                                 let bntCheck = false
-                                let btns = document.querySelectorAll('.adm-detail-content-btns a')
+                                let btns = document.querySelectorAll('.adm-detail-content-btns .adm-btn')
                                 for (let i = 0; i < btns.length; i++) {
                                     const element = btns[i];
                                     if(element.textContent == 'Просмотр')
@@ -51,7 +50,7 @@ class AdminAreaSeoAnalysis
                         <script>
                             document.addEventListener('DOMContentLoaded', function(){
                                 let bntCheck = false
-                                let btns = document.querySelectorAll('.adm-detail-content-btns a')
+                                let btns = document.querySelectorAll('.adm-detail-content-btns .adm-btn')
                                 for (let i = 0; i < btns.length; i++) {
                                     const element = btns[i];
                                     if(element.textContent == 'Просмотр')
@@ -78,7 +77,7 @@ class AdminAreaSeoAnalysis
                             <script>
                                 document.addEventListener('DOMContentLoaded', function(){
                                     let bntCheck = false
-                                    let btns = document.querySelectorAll('.adm-detail-content-btns a')
+                                    let btns = document.querySelectorAll('.adm-detail-content-btns .adm-btn')
                                     for (let i = 0; i < btns.length; i++) {
                                         const element = btns[i];
                                         if(element.textContent == 'Просмотр')

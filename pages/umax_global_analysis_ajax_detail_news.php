@@ -49,7 +49,7 @@
 
         $dom = new \DOMDocument;
         $getContents = file_get_contents($page);
-        $dom->loadHTML($getContents);
+        $dom->loadHTML('<?xml encoding="utf-8" ?>' . $getContents);
 
         $title = $dom->getElementsByTagName('title');
         if(count($title) > 0) {
